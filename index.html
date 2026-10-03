@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Real Talk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Lora:ital,wght@1,500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,9 +20,7 @@
       --card-bg: #fff9f5;
       --card-bg2: #ffeee6;
       --card-text: #1c0a18;
-      --card-en: #7a5560;
-      --deck1: #f3e5de;
-      --deck2: #e8d5cc;
+      --card-en: #5b3a46;
     }
 
     html, body {
@@ -29,7 +30,7 @@
 
     body {
       background: linear-gradient(155deg, var(--bg1) 0%, var(--bg2) 55%, #1a0530 100%);
-      font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+      font-family: 'Heebo', -apple-system, 'Segoe UI', Arial, sans-serif;
       color: #fff;
       display: flex;
       flex-direction: column;
@@ -38,60 +39,86 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    button { font-family: inherit; }
+
     /* ─── HEADER ─── */
     .header {
       width: 100%;
-      padding: 18px 24px 10px;
+      padding: 16px 20px 6px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       flex-shrink: 0;
     }
 
     .title {
-      font-size: 26px;
+      font-size: clamp(19px, 5.6vw, 26px);
       font-weight: 800;
-      letter-spacing: 4px;
+      letter-spacing: 3px;
       background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .counter {
-      font-size: 14px;
-      color: rgba(255,255,255,0.55);
-      direction: rtl;
-      text-align: left;
+    /* Language switch */
+    .lang-switch {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
     }
 
-    .counter span {
-      color: var(--rose);
-      font-weight: 700;
-      font-size: 16px;
+    .lang-switch button {
+      border: none;
+      background: none;
+      color: rgba(255,255,255,0.72);
+      font-size: 13px;
+      font-weight: 600;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .lang-switch button.active {
+      background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
+      color: #fff;
     }
 
     /* ─── CARD AREA ─── */
     .card-area {
       flex: 1;
+      min-height: 0;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
-      width: 100%;
-      padding: 10px 20px;
+      padding: 8px 20px 14px;
     }
 
-    /* Card stage — single flex item that holds deck + active card */
+    /* Card stage — holds the deck + the active card. Its size follows the free height,
+       so the card grows on big screens and shrinks on small phones. */
     .card-stage {
       position: relative;
-      width: clamp(280px, 82vw, 360px);
-      height: clamp(360px, 56vh, 520px);
-      perspective: 1000px;
+      height: 100%;
+      max-height: 700px;
+      min-height: 260px;
+      aspect-ratio: 3 / 4;
+      max-width: 100%;
       flex-shrink: 0;
+      perspective: 1000px;
+      touch-action: pan-y;
+      cursor: grab;
     }
 
-    /* Deck (background cards) */
+    .card-stage:active { cursor: grabbing; }
+
+    /* Deck (the stack of card backs behind the active card) */
     .deck {
       position: absolute;
       inset: 0;
@@ -103,24 +130,36 @@
       position: absolute;
       inset: 0;
       border-radius: 20px;
-      background: linear-gradient(145deg, var(--deck1), var(--deck2));
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background:
+        repeating-linear-gradient(45deg, rgba(200,137,106,0.20) 0 2px, transparent 2px 15px),
+        repeating-linear-gradient(-45deg, rgba(200,137,106,0.20) 0 2px, transparent 2px 15px),
+        linear-gradient(145deg, #5f1f4a 0%, #2f0f3d 100%);
+      border: 1.5px solid rgba(200,137,106,0.6);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s;
     }
 
-    .deck-card:nth-child(1) { transform: translate(6px, 6px) rotate(3deg); }
-    .deck-card:nth-child(2) { transform: translate(3px, 3px) rotate(1.5deg); }
-    .deck-card:nth-child(3) { transform: translate(0, 0) rotate(0deg); }
+    .deck-card::after {
+      content: '';
+      position: absolute;
+      inset: 9px;
+      border-radius: 13px;
+      border: 1px solid rgba(200,137,106,0.4);
+    }
 
-    .deck.shuffling .deck-card:nth-child(1) {
-      transform: translate(-50px, -25px) rotate(-18deg);
-    }
-    .deck.shuffling .deck-card:nth-child(2) {
-      transform: translate(40px, -12px) rotate(12deg);
-    }
-    .deck.shuffling .deck-card:nth-child(3) {
-      transform: translate(-18px, 18px) rotate(-7deg);
-    }
+    .deck-card:nth-child(1) { transform: translate(11px, 11px) rotate(4deg); }
+    .deck-card:nth-child(2) { transform: translate(-8px, 8px) rotate(-3deg); }
+    .deck-card:nth-child(3) { transform: translate(6px, 5px) rotate(2deg); }
+    .deck-card:nth-child(4) { transform: translate(-3px, 3px) rotate(-1.2deg); }
+    .deck-card:nth-child(5) { transform: translate(0, 0) rotate(0deg); }
+
+    .deck-card.gone { opacity: 0; }
+
+    .deck.shuffling .deck-card:nth-child(1) { transform: translate(-42px, -26px) rotate(-18deg); }
+    .deck.shuffling .deck-card:nth-child(2) { transform: translate(40px, -14px) rotate(13deg); }
+    .deck.shuffling .deck-card:nth-child(3) { transform: translate(-20px, 20px) rotate(-8deg); }
+    .deck.shuffling .deck-card:nth-child(4) { transform: translate(24px, 16px) rotate(7deg); }
+    .deck.shuffling .deck-card:nth-child(5) { transform: translate(-6px, 8px) rotate(-3deg); }
 
     /* Main card */
     .card {
@@ -142,29 +181,45 @@
       transform: rotateY(-90deg) scale(0.92);
     }
 
+    /* Swiped away: flies off to the side it was dragged to (--fly is 1 or -1) */
+    .card.swipe-out {
+      transform: translateX(calc(var(--fly, 1) * 130%)) rotate(calc(var(--fly, 1) * 16deg));
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 1, 1), opacity 0.3s ease-in;
+    }
+
     .card-face {
+      --cat: var(--rose);
+      --cat-ink: var(--rose-dark);
+      --cat-soft: rgba(224, 79, 120, 0.14);
+      --cat-glow: var(--rose-glow);
       position: absolute;
       inset: 0;
       border-radius: 20px;
       background: linear-gradient(160deg, var(--card-bg) 0%, var(--card-bg2) 100%);
-      box-shadow: 0 16px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08), 0 0 60px var(--rose-glow);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08), 0 0 60px var(--cat-glow);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px 28px;
-      gap: 18px;
+      padding: 54px 26px 42px;
+      transition: box-shadow 0.3s;
     }
 
-    /* Card top decoration */
+    /* Category palettes — used by the card face and by the filter chips */
+    [data-cat="all"]   { --cat: var(--rose); }
+    [data-cat="light"] { --cat: #e8912d; --cat-ink: #94550a; --cat-soft: rgba(232,145,45,0.16); --cat-glow: rgba(232,145,45,0.38); }
+    [data-cat="deep"]  { --cat: #6a74e0; --cat-ink: #3a44ae; --cat-soft: rgba(106,116,224,0.15); --cat-glow: rgba(106,116,224,0.40); }
+    [data-cat="love"]  { --cat: #e04f78; --cat-ink: #b83560; --cat-soft: rgba(224,79,120,0.14);  --cat-glow: rgba(224,79,120,0.38); }
+    [data-cat="spicy"] { --cat: #e5432b; --cat-ink: #ad2812; --cat-soft: rgba(229,67,43,0.14);   --cat-glow: rgba(229,67,43,0.42); }
+
+    /* Card corner decoration */
     .card-face::before {
       content: '♥';
       position: absolute;
       top: 14px;
       right: 18px;
       font-size: 20px;
-      color: var(--rose);
-      opacity: 0.5;
+      color: var(--cat);
+      opacity: 0.55;
     }
 
     .card-face::after {
@@ -173,31 +228,68 @@
       bottom: 14px;
       left: 18px;
       font-size: 20px;
-      color: var(--rose);
-      opacity: 0.5;
+      color: var(--cat);
+      opacity: 0.55;
       transform: rotate(180deg);
     }
 
+    .cat-badge {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: var(--cat-soft);
+      color: var(--cat-ink);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* Wrapper that centers the text when it fits, and lets us detect when it doesn't */
+    .qwrap {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .qinner {
+      margin: auto 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
     .question-he {
-      font-size: clamp(22px, 6.5vw, 32px);
+      font-size: calc(clamp(22px, min(6.5vw, 4.2vh), 38px) * var(--fit, 1));
       font-weight: 700;
       color: var(--card-text);
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.45;
       direction: rtl;
     }
 
     .card-divider {
       width: 50px;
       height: 2px;
-      background: linear-gradient(90deg, transparent, var(--rose), transparent);
+      background: linear-gradient(90deg, transparent, var(--cat), transparent);
       border-radius: 2px;
       flex-shrink: 0;
     }
 
     .question-en {
-      font-size: clamp(15px, 4.5vw, 19px);
-      font-weight: 400;
+      font-family: 'Lora', Georgia, 'Times New Roman', serif;
+      font-size: calc(clamp(16px, min(4.8vw, 2.7vh), 22px) * var(--fit, 1));
+      font-weight: 500;
       color: var(--card-en);
       text-align: center;
       line-height: 1.45;
@@ -205,26 +297,52 @@
       font-style: italic;
     }
 
+    /* English-only mode: the English becomes the main text */
+    .question-en.main {
+      font-family: inherit;
+      font-style: normal;
+      font-weight: 700;
+      color: var(--card-text);
+      font-size: calc(clamp(22px, min(6.5vw, 4.2vh), 38px) * var(--fit, 1));
+      line-height: 1.4;
+    }
+
     /* Welcome state */
     .welcome-icon {
-      font-size: 48px;
+      font-size: 52px;
       line-height: 1;
     }
 
-    .welcome-text {
-      font-size: clamp(15px, 4.5vw, 20px);
+    .welcome-brand {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--card-text);
+      direction: ltr;
+    }
+
+    .welcome-line {
+      font-size: calc(clamp(18px, min(5.2vw, 3.4vh), 26px) * var(--fit, 1));
       font-weight: 700;
       color: var(--card-text);
+      text-align: center;
+      line-height: 1.4;
+      direction: rtl;
+    }
+
+    .welcome-sub {
+      font-size: calc(clamp(14px, min(4vw, 2.4vh), 18px) * var(--fit, 1));
+      color: var(--card-en);
       text-align: center;
       line-height: 1.5;
       direction: rtl;
     }
 
-    .welcome-sub {
-      font-size: 13px;
-      color: var(--card-en);
-      text-align: center;
+    .welcome-en {
       direction: ltr;
+      font-family: 'Lora', Georgia, 'Times New Roman', serif;
+      font-style: italic;
+      font-weight: 500;
     }
 
     /* Done overlay */
@@ -233,12 +351,13 @@
       position: absolute;
       inset: 0;
       border-radius: 20px;
-      background: rgba(255,249,245,0.92);
+      background: linear-gradient(160deg, #fff6f0 0%, #ffdce6 100%);
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      gap: 12px;
-      backdrop-filter: blur(4px);
+      gap: 10px;
+      padding: 28px;
+      text-align: center;
     }
 
     .done-overlay.visible {
@@ -247,44 +366,155 @@
 
     .done-icon {
       font-size: 64px;
+      line-height: 1;
     }
 
     .done-text {
-      font-size: 22px;
-      font-weight: 700;
+      font-size: 28px;
+      font-weight: 800;
       color: var(--card-text);
     }
 
     .done-sub {
-      font-size: 14px;
+      font-size: 16px;
+      line-height: 1.5;
       color: var(--card-en);
     }
 
+    .done-en {
+      direction: ltr;
+      font-family: 'Lora', Georgia, 'Times New Roman', serif;
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .done-btn {
+      margin-top: 10px;
+      min-height: 46px;
+      padding: 0 26px;
+      border: none;
+      border-radius: 23px;
+      background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px var(--rose-glow);
+    }
+
+    .done-btn:active { transform: scale(0.97); }
+
     /* ─── CONTROLS ─── */
     .controls {
-      width: 100%;
-      padding: 12px 24px 24px;
-      padding-bottom: max(24px, env(safe-area-inset-bottom));
+      width: min(92vw, 440px);
+      padding: 6px 0 22px;
+      padding-bottom: max(22px, env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Counter + reset */
+    .status {
+      display: flex;
       align-items: center;
       gap: 14px;
+    }
+
+    .counter-block {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .counter {
+      font-size: 15px;
+      color: rgba(255,255,255,0.75);
+      white-space: nowrap;
+    }
+
+    .counter b {
+      color: var(--rose);
+      font-weight: 800;
+      font-size: 22px;
+    }
+
+    .progress {
+      height: 6px;
+      margin-top: 6px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--rose), var(--gold));
+      transition: width 0.4s ease;
+    }
+
+    .reset-btn {
       flex-shrink: 0;
+      min-height: 44px;
+      padding: 0 16px;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 22px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+
+    .reset-btn:hover { color: #fff; border-color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.06); }
+
+    /* Category chips */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .chip {
+      min-height: 38px;
+      padding: 0 8px;
+      border-radius: 19px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.82);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .chip.active {
+      background: var(--cat);
+      border-color: var(--cat);
+      color: #fff;
     }
 
     /* Toggle */
     .toggle-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 12px;
+      min-height: 44px;
       direction: rtl;
       cursor: pointer;
     }
 
     .toggle-wrap {
       position: relative;
-      width: 44px;
-      height: 26px;
+      width: 52px;
+      height: 30px;
       flex-shrink: 0;
     }
 
@@ -297,7 +527,7 @@
     .toggle-track {
       position: absolute;
       inset: 0;
-      border-radius: 26px;
+      border-radius: 30px;
       background: rgba(255,255,255,0.2);
       transition: background 0.25s;
     }
@@ -309,7 +539,7 @@
     .toggle-thumb {
       position: absolute;
       top: 3px; left: 3px;
-      width: 20px; height: 20px;
+      width: 24px; height: 24px;
       border-radius: 50%;
       background: #fff;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
@@ -318,19 +548,18 @@
 
     .toggle-wrap input:checked ~ .toggle-track ~ .toggle-thumb,
     .toggle-wrap input:checked + .toggle-track + .toggle-thumb {
-      transform: translateX(18px);
+      transform: translateX(22px);
     }
 
     .toggle-label-text {
       font-size: 15px;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255,255,255,0.85);
     }
 
     /* Shuffle button */
     .shuffle-btn {
       width: 100%;
-      max-width: 360px;
-      height: 62px;
+      height: 58px;
       border-radius: 16px;
       border: none;
       background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
@@ -377,19 +606,15 @@
       100% { transform: rotate(360deg) scale(1); }
     }
 
-    /* Reset button */
-    .reset-btn {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.45);
-      font-size: 13px;
-      padding: 6px 18px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
+    /* Short phones: tighten the controls so the card keeps its room */
+    @media (max-height: 740px) {
+      .header { padding-top: 10px; }
+      .controls { gap: 6px; padding-bottom: 14px; }
+      .toggle-row { min-height: 36px; }
+      .shuffle-btn { height: 52px; }
+      .chip { min-height: 34px; }
+      .reset-btn { min-height: 38px; }
     }
-
-    .reset-btn:hover { color: rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.4); }
 
     /* ─── ANIMATIONS ─── */
     @keyframes card-pop-in {
@@ -429,29 +654,46 @@
 
 <div class="header">
   <div class="title">Real Talk</div>
-  <div class="counter">
-    <span id="remaining-num">—</span> נשארו
+  <div class="lang-switch" id="lang-switch" role="group" aria-label="שפת הקלפים">
+    <button type="button" data-lang="he" aria-pressed="false">עברית</button>
+    <button type="button" data-lang="both" aria-pressed="true" class="active">שתיהן</button>
+    <button type="button" data-lang="en" aria-pressed="false">אנגלית</button>
   </div>
 </div>
 
 <div class="card-area">
-  <div class="card-stage">
+  <div class="card-stage" id="stage">
+    <div class="deck" id="deck">
+      <div class="deck-card"></div>
+      <div class="deck-card"></div>
+      <div class="deck-card"></div>
+      <div class="deck-card"></div>
+      <div class="deck-card"></div>
+    </div>
     <div class="card" id="card">
-      <div class="card-face" id="card-face">
-        <div class="welcome-icon">🃏</div>
-        <div class="welcome-text">Real Talk</div>
-        <div class="welcome-sub">Press Shuffle to begin</div>
-      </div>
-      <div class="done-overlay" id="done-overlay">
-        <div class="done-icon">🎉</div>
-        <div class="done-text">כל הכבוד!</div>
-        <div class="done-sub">גמרתם את כל הקלפים</div>
-      </div>
+      <div class="card-face" id="card-face"></div>
+      <div class="done-overlay" id="done-overlay"></div>
     </div>
   </div>
 </div>
 
 <div class="controls">
+  <div class="status">
+    <div class="counter-block">
+      <div class="counter" id="counter">—</div>
+      <div class="progress" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <button class="reset-btn" id="reset-btn" type="button">↺ איפוס קלפים</button>
+  </div>
+
+  <div class="chips" id="chips" role="group" aria-label="קטגוריות">
+    <button type="button" class="chip active" data-cat="all" aria-pressed="true">הכל</button>
+    <button type="button" class="chip" data-cat="light" aria-pressed="false">😄 קליל</button>
+    <button type="button" class="chip" data-cat="deep" aria-pressed="false">💭 עמוק</button>
+    <button type="button" class="chip" data-cat="love" aria-pressed="false">💞 רומנטי</button>
+    <button type="button" class="chip" data-cat="spicy" aria-pressed="false">🔥 נועז</button>
+  </div>
+
   <label class="toggle-row">
     <div class="toggle-wrap">
       <input type="checkbox" id="dont-repeat" checked>
@@ -465,280 +707,291 @@
     <span class="shuffle-icon">🔀</span>
     <span>SHUFFLE</span>
   </button>
-
-  <button class="reset-btn" id="reset-btn">איפוס קלפים</button>
 </div>
 
 <script>
 const QUESTIONS = [
-  { he: "מה ההרפתקאה הבאה שלך?", en: "What is your next great adventure?" },
-  { he: "למה את/ה אסיר/ת תודה ברגע זה?", en: "What are you thankful for this very moment?" },
-  { he: "מה גורם לך להרגיש חי/ה?", en: "What makes you feel really alive?" },
-  { he: "איזו תכונה מוזרה יש למשפחה שלך?", en: "What is a quirk your family has?" },
-  { he: "למה את/ה מתגעגע/ת?", en: "What do you miss?" },
-  { he: "איפה היית רוצה/ת להתעורר מחר?", en: "Where would you like to wake up tomorrow?" },
-  { he: "למה את/ה הכי מצפה?", en: "What are you looking forward to?" },
-  { he: "איזה חפץ היית מציל/ה אם הבית היה עולה באש?", en: "What object would you save if your house was on fire?" },
-  { he: "האם היית רוצה/ת שהילדים שלך יהיו כמוך?", en: "Do you want your children (if you have any) to be like you?" },
-  { he: "האם יש משהו שלא היית רוצה/ת לדעת?", en: "Is there anything you wish you didn't know?" },
-  { he: "למה את/ה הכי אסיר/ת תודה?", en: "What are you most grateful for?" },
-  { he: "אם היו לך 24 שעות לחיות, עם מי היית בעוד 23 שעות?", en: "If you had 24 hours left to live, who would you be with in 23 hours?" },
-  { he: "מה המחמאה הכי טובה שקיבלת?", en: "What was the best compliment you ever received?" },
-  { he: "מה דבר אחד שיכול לקרות היום כדי להפוך אותו לטוב אף יותר?", en: "What is one thing that could happen today to make it even better?" },
-  { he: "האם יש מישהו בחיים שלך שאת/ה מעריץ/ה? למה?", en: "Is there anybody in your life you admire? Why?" },
-  { he: "מה אנשים צריכים לעשות יותר?", en: "What should people do more of?" },
-  { he: "במה את/ה לא משקיע/ה מספיק זמן?", en: "What don't you spend enough time doing?" },
-  { he: "איך החברים שלך היו מתארים אותך בכמה משפטים?", en: "How would your friends describe you in a few sentences?" },
-  { he: "אם יכולת לנהל מדינה משלך, איך זה היה?", en: "If you could create and run your own country, what would it be like?" },
-  { he: "אם יכולת לדבר עם כל אחד בעולם, מה היית אומר/ת?", en: "If you could talk to everyone in the world, what would you say?" },
-  { he: "מה היית רוצה/ת לדעת?", en: "What do you wish you knew?" },
-  { he: "מה עושה לך צמרמורת?", en: "What gives you goose bumps?" },
-  { he: "מה את/ה רוצה/ת לעשות לפני שתמות?", en: "What do you want to do before you die?" },
-  { he: "מה גורם לך לאבד את תחושת הזמן?", en: "What makes you lose track of time?" },
-  { he: "על מה את/ה נלחם/ת?", en: "What do you fight for?" },
-  { he: "מהי העדיפות מספר אחת שלך היום?", en: "What is your number one priority today?" },
-  { he: "איזו עצה היית מבקש/ת מהגיבור הגדול ביותר שלך?", en: "What advice would you ask for from your greatest hero?" },
-  { he: "מה היה הגיל האהוב עליך עד כה ולמה?", en: "What has been your favorite age so far and why?" },
-  { he: "תאר/י יום מושלם.", en: "Describe a perfect day." },
-  { he: "איזו עצה היית נותן/ת לעצמך לפני חמש שנים?", en: "What advice would you give to yourself five years ago?" },
-  { he: "מה את/ה מעריך/ה שלא עולה כסף?", en: "What do you value that doesn't cost money?" },
-  { he: "את מי בעולם הזה את/ה אוהב/ת ביותר ומה את/ה עושה בקשר לזה?", en: "Who in this world do you love most and what are you doing about it?" },
-  { he: "על מה את/ה מבלה יותר מדי זמן?", en: "What do you spend too much time doing?" },
-  { he: "מה מסקרן אותך בזמן האחרון?", en: "What are you curious about lately?" },
-  { he: "מה האירוע המשפיע ביותר שקרה בחיים שלך?", en: "What was the most impactful event in your life?" },
-  { he: "האם את/ה מסתגל/ת לסביבה או בולט/ת? איך זה?", en: "Do you fit in or stand out? How so?" },
-  { he: "מהו הזיכרון הקדום ביותר שלך על הישג?", en: "What's your earliest memory of achievement?" },
-  { he: "איזו עצה היית מציע/ה לתינוק שנולד עכשיו?", en: "What piece of advice would you offer a newborn infant?" },
-  { he: "ממה העולם הזה צריך יותר?", en: "What does this world need more of?" },
-  { he: "מה היית רוצה/ת שאנשים ידעו עליך?", en: "What do you wish more people knew about you?" },
-  { he: "איזו שאלה היית שואל/ת מגיד/ת עתידות?", en: "What is the one question you would ask a fortune teller?" },
-  { he: "איזו תכונה לא פיזית את/ה מוצא/ת מושכת באדם אחר?", en: "What non-physical traits do you find attractive in other people?" },
-  { he: "האם יש מישהו שהיית סומך/ת עליו בחיים שלך?", en: "Is there anyone who you would trust with your life?" },
-  { he: "אם יכולת לעצור את הזמן, מה היית עושה/ת?", en: "If you could freeze time, what would you do?" },
-  { he: "מה נותן לך תקווה?", en: "What gives you hope?" },
-  { he: "מה הדבר הכי ספונטני שעשית?", en: "What is the most spontaneous thing you've ever done?" },
-  { he: "איזה שיעור לחיים היית רוצה/ת שכולם ילמדו בבית הספר?", en: "What life lesson do you wish everyone was taught in school?" },
-  { he: "תאר/י נקודת מפנה בחיים שלך.", en: "Describe a turning point in your life." },
-  { he: "מה את/ה מוצא/ת יפה בחיים?", en: "What do you find beautiful?" },
-  { he: "מה עשית לאחרונה שגרם לך לאבד לגמרי את תחושת הזמן?", en: "What were you doing the last time you lost track of time?" },
-  { he: "מה המצב שלך... באמת?", en: "How are you... really doing?" },
-  { he: "מה החוזקה הגדולה שלך?", en: "What is your greatest strength?" },
-  { he: "מה את/ה מקווה/ת להשיג בעוד 5 שנים?", en: "What do you hope to achieve in five years?" },
-  { he: "במה את/ה מאמין/ה?", en: "What do you stand for?" },
-  { he: "במה התנסית לאחרונה בפעם הראשונה?", en: "What is something new you have recently tried?" },
-  { he: "מה חשוב לך ולמה?", en: "What matters to you and why?" },
-  { he: "למה היית עד/ה שחיזק את האמונה שלך באנושות?", en: "What have you witnessed that has strengthened your faith in humanity?" },
-  { he: "אם לא היית צריך/ה לדאוג לכסף, איך היית חי/ה אחרת?", en: "If money were no concern, how would you lead life differently?" },
-  { he: "אילו דברים קטנים בחיים גורמים לך לעצור ולהעריך?", en: "What little things in life do you stop and appreciate?" },
-  { he: "איזה הרגל חדש את/ה רוצה/ת ליצור?", en: "What is a new habit you want to form?" },
-  { he: "איך היית חי/ה אחרת אם לא יכולת למות?", en: "How would you live life differently if you could never die?" },
-  { he: "למה את/ה עושה את מה שאת/ה עושה?", en: "Why do you do what you do?" },
-  { he: "מהי תפיסה מוטעית נפוצה שאנשים עושים עליך?", en: "What is a common misconception that people may have about you?" },
-  { he: "למען מי או מה את/ה עובד/ת?", en: "For who or what do you work for?" },
-  { he: "מה הופך אותך למי שאתה/את?", en: "What makes you, you?" },
-  { he: "מה הדברים שאת/ה שם/ה לב אליהם כשאת/ה פוגש/ת אדם חדש?", en: "What are the first things you notice when meeting someone?" },
-  { he: "מה הדבר הכי אדיב שמישהו עשה עבורך?", en: "What is the kindest thing someone has ever done for you?" },
-  { he: "מתי הייתה הפעם האחרונה ששיקרת? ולמה?", en: "When was the last time you lied? Why?" },
-  { he: "מה זאת הצלחה עבורך?", en: "What does success mean to you?" },
-  { he: "מה יש לך שאת/ה לא יכול/ה לחיות בלעדיו?", en: "What do you have that you cannot live without?" },
-  { he: "תאר/י משהו שעשית בפעם הראשונה בחיים שלך.", en: "Describe a first in your life." },
-  { he: "תאר/י גן עדן.", en: "Describe paradise." },
-  { he: "מה המתנה הכי טובה שמישהו יכול להעניק לך?", en: "What is the best gift that someone can give you?" },
-  { he: "איך את/ה מרגיש/ת לגבי ימי הולדת?", en: "How do you feel about birthdays?" },
-  { he: "איפה את/ה מוצא/ת שלווה?", en: "Where do you find peace?" },
-  { he: "מה התחלת ומעולם לא סיימת, ולמה?", en: "What have you started but never finished, and why?" },
-  { he: "כיצד את/ה יוצר/ת שינוי בעולם?", en: "How are you making a difference in the world?" },
-  { he: "מה המקום האהוב עליך בעולם?", en: "What is your favorite place in the world?" },
-  { he: "איך את/ה מראה אהבה?", en: "How do you show love?" },
-  { he: "מה את/ה יכול/ה לעשות היום שלא יכולת לפני שנה?", en: "What can you do today that you couldn't do a year ago?" },
-  { he: "האם היו לך אי פעם חוויות קרובות למוות?", en: "Have you ever had any near-death experiences?" },
-  { he: "מה את/ה הכי מעריך/ה בחברות?", en: "What do you value most in a friendship?" },
-  { he: "מה את/ה מעריך/ה?", en: "What do you value?" },
-  { he: "מה החלום שלך?", en: "What do you dream about?" },
-  { he: "מה היה חלום הילדות שלך? האם הוא השתנה?", en: "What was your childhood dream? Has it changed?" },
-  { he: "איך היחסים שלך עם אמא שלך?", en: "What is your relationship with your mother like?" },
-  { he: "על מה את/ה חושב/ת כשאת/ה מתעורר/ת בבוקר?", en: "What do you think about when you wake up?" },
-  { he: "מה את/ה עושה/ת כשאף אחד לא מסתכל?", en: "What do you do when nobody is watching?" },
-  { he: "את מי היית מזמין/ה לארוחת ערב אם יכולת להזמין כל אחד בעולם?", en: "Given the choice of anyone in the world, whom would you want as a dinner guest?" },
-  { he: "האם היית רוצה/ת להיות מפורסם/ת? באיזה אופן?", en: "Would you like to be famous? In what way?" },
-  { he: "לפני שיחת טלפון, האם אתה/את מתרגל/ת מה תגיד/י? למה?", en: "Before making a telephone call, do you ever rehearse what you are going to say? Why?" },
-  { he: "מה היה מהווה עבורך יום 'מושלם'?", en: "What would constitute a perfect day for you?" },
-  { he: "מתי שרת לעצמך לאחרונה? ולמישהו אחר?", en: "When did you last sing to yourself? To someone else?" },
-  { he: "אם יכולת לחיות עד 90 עם הגוף או המוח שלך בגיל 30, מה היית בוחר/ת?", en: "If you could live to 90 and retain either the mind or body of a 30-year-old, which would you want?" },
-  { he: "יש לך תחושת בטן איך תמות?", en: "Do you have a secret hunch about how you will die?" },
-  { he: "מנה שלושה דברים שנראה שיש לנו במשותף.", en: "Name three things you and your partner appear to have in common." },
-  { he: "על מה בחיים שלך את/ה הכי אסיר/ת תודה?", en: "For what in your life do you feel most grateful?" },
-  { he: "אם יכולת לשנות משהו באופן שגדלת, מה היית משנה?", en: "If you could change anything about the way you were raised, what would it be?" },
-  { he: "קח/י 4 דקות וספר/י את סיפור חייך בכמה שיותר פרטים.", en: "Take four minutes and tell your partner your life story in as much detail as possible." },
-  { he: "אם יכולת לקום מחר עם תכונה או יכולת אחת, מה היית בוחר/ת?", en: "If you could wake up tomorrow having gained any one quality or ability, what would it be?" },
-  { he: "אם כדור בדולח יכול היה לספר לך אמת אחת על חייך, מה היית רוצה/ת לדעת?", en: "If a crystal ball could tell you the truth about anything, what would you want to know?" },
-  { he: "יש משהו שאת/ה חולם/ת לעשות הרבה זמן? למה עדיין לא עשית/ת אותו?", en: "Is there something that you've dreamed of doing for a long time? Why haven't you done it?" },
-  { he: "מה ההישג הכי גדול של חייך?", en: "What is the greatest accomplishment of your life?" },
-  { he: "מה אתה/את הכי מעריך/ה בחברות?", en: "What do you value most in a friendship?" },
-  { he: "מהו הזיכרון היקר ביותר שלך?", en: "What is your most treasured memory?" },
-  { he: "מה הזיכרון הכי קשה שלך?", en: "What is your most terrible memory?" },
-  { he: "אם ידעת שתמות בפתאומיות בעוד שנה, האם היית משנה משהו? למה?", en: "If you knew that in one year you would die suddenly, would you change anything about the way you are now living?" },
-  { he: "מה המשמעות של חברות עבורך?", en: "What does friendship mean to you?" },
-  { he: "מה התפקיד של אהבה וחיבה בחיים שלך?", en: "What roles do love and affection play in your life?" },
-  { he: "שתף/י תכונה חיובית שאת/ה רואה בי. תחליפו חמישה פעמים.", en: "Alternate sharing something you consider a positive characteristic of your partner. Share a total of five items." },
-  { he: "עד כמה המשפחה שלך חמה וקרובה? הרגשת שהילדות שלך הייתה שמחה יותר מאחרים?", en: "How close and warm is your family? Do you feel your childhood was happier than most other people's?" },
-  { he: "איך את/ה מרגיש/ת כלפי היחסים שלך עם אמא שלך?", en: "How do you feel about your relationship with your mother?" },
-  { he: "אמור/י שלושה משפטים שמתחילים ב'אנחנו', לדוגמא: 'אנחנו מרגישים...'", en: "Make three true 'we' statements each. For instance, 'We are both in this room feeling...'" },
-  { he: "השלם/י: 'הלוואי שהיה לי מישהו שהייתי יכול/ה לחלוק איתו...'", en: "Complete this sentence: 'I wish I had someone with whom I could share...'" },
-  { he: "מה חשוב לך שהאדם שממול ידע עליך?", en: "If you were going to become a close friend with your partner, what would be important for them to know?" },
-  { he: "תגיד/י לי מה את/ה אוהב/ת בי. תהיה/י כנה מאוד.", en: "Tell your partner what you like about them; be very honest this time." },
-  { he: "שתף/י אותי ברגע הכי מביך בחייך.", en: "Share with your partner an embarrassing moment in your life." },
-  { he: "מתי בכית לאחרונה מול מישהו? ולבד?", en: "When did you last cry in front of another person? By yourself?" },
-  { he: "תגיד/י לי משהו שאת/ה כבר אוהב/ת בי.", en: "Tell your partner something that you like about them already." },
-  { he: "האם יש משהו שרציני מדי מכדי לצחוק עליו?", en: "What, if anything, is too serious to be joked about?" },
-  { he: "אם היית מת/ה הלילה בלי להיפרד, מה היית מתחרט/ת שלא אמרת? למה לא אמרת עדיין?", en: "If you were to die this evening with no opportunity to communicate with anyone, what would you most regret not having told someone?" },
-  { he: "הבית שלך עולה באש. לאחר שמצלת/ת את יקיריך, יש לך זמן לחלץ פריט אחד – מה תבחר/י?", en: "Your house catches fire. After saving your loved ones, you can save one item. What would it be?" },
-  { he: "מי מבין קרובי המשפחה שלך – מותו/מותה היה מזעזע אותך הכי הרבה? למה?", en: "Of all the people in your family, whose death would you find most disturbing? Why?" },
-  { he: "שתף/י אותי בבעיה אישית ובקש/י ממני עצה. אחר כך בקש/י ממני לשקף איך אתה/את נראה/ת מרגיש/ה.", en: "Share a personal problem and ask your partner's advice on how they might handle it." },
-  { he: "מה הייתה אחת מחופשות המשפחה האהובות עליך בילדות?", en: "What was one of your favorite family vacations growing up?" },
-  { he: "אם זכית בלוטו גדול, מה היית עושה/ת עם הכסף?", en: "If you won the lottery, what would you do?" },
-  { he: "אם יכולת לחיות מחדש יום מדהים מחייך, איזה יום היית בוחר/ת?", en: "If you could re-live an amazing day in your life, what day would you want to re-live?" },
-  { he: "אם יכולת להחליף חיים עם אחד לאחד ליום אחד, מי זה היה ומה היית רוצה/ת לחוות?", en: "If you could trade lives with one person for one day, who would it be and what would you want to experience?" },
-  { he: "בוא/י ניתן אחד לשני שמות ראפ אקראיים – מה יהיה שם הראפ שלי?", en: "Let's give each other random rapper names — what would my rap name be?" },
-  { he: "מתי את/ה זוכר/ת לראשונה שהיה לך מחשבה מינית?", en: "When was the first time you remember having a sexual thought?" },
-  { he: "מה הייתה הנשיקה הגרועה ביותר שחווית?", en: "What was your worst kiss ever?" },
-  { he: "אם אמרו לך שנשאר לך רק חודש לחיות, מה היית עושה/ת?", en: "If you were told you only had one month left to live, what would you do?" },
-  { he: "ספר/י לי על ספר או סרט תיעודי שממש השפיע עליך ושינה את האופן שבו את/ה רואה דברים", en: "What's a book or documentary film that really had an impact on you?" },
-  { he: "אם יכולת להתחתן עם דמות בדיונית, מי זה היה ולמה?", en: "If you could marry a fictional character, who would it be and why?" },
-  { he: "מה את/ה הכי מעריך/ה בחברים שלך?", en: "What is it about your friends you appreciate the most?" },
-  { he: "אם יכולת לגור בכל עיר בעולם מלבד המקום הנוכחי, מה הייתה הבחירה הראשונה שלך?", en: "If you could live in any city other than where you live now, what would be your first choice?" },
-  { he: "אם יכולת לאכול ארוחת צהריים עם כל אחד, חי או מת, מי זה היה ולמה?", en: "If you could have lunch with anyone living or dead, who would it be and why?" },
-  { he: "מה מעורר בך תשוקה?", en: "What are you passionate about?" },
-  { he: "אם יכולת לנפנף בשרביט קסם וליצור את חיי האהבה האידיאליים שלך, איך זה היה נראה?", en: "If you could wave a magic wand and create your ideal love life, what would that look like?" },
-  { he: "ספר/י לי על ריקוד בית הספר הראשון שלך", en: "Tell me about your very first school dance" },
-  { he: "מי היה המורה האהוב עליך בתיכון? למה?", en: "Who was your favorite teacher in high school? Why?" },
-  { he: "מי השפיע עליך הכי הרבה בחיים? מה למדת ממנו/ה?", en: "Who has had a big impact on your life? What was a lesson you learned from them?" },
-  { he: "אילו שלוש מילים היית רוצה/ת שישתמשו בהן כדי לתאר אותך אחרי שתלך מהעולם?", en: "What three words would you want people to describe you as after you pass away?" },
-  { he: "מה היית רוצה/ת לעשות יותר אם היה לך יותר זמן?", en: "What's something you would love to do more of, if you had more time?" },
-  { he: "מה החג האהוב עליך?", en: "What's your favorite holiday?" },
-  { he: "מה מסורת חגיגית שהיית מוכן/ת לוותר עליה?", en: "What's a holiday tradition you could leave behind?" },
-  { he: "איך היית/ית כילד/ה?", en: "What were you like as a kid?" },
-  { he: "מה משהו רגיל בחיי היומיום שלך שאת/ה מוצא/ת יפה?", en: "What's something ordinary in your daily life that you find beautiful?" },
-  { he: "מה האיבר האהוב עליך בגוף?", en: "What is your favorite body part?" },
-  { he: "האם את/ה מאמין/ה ברוחות רפאים, או חווית/ה אי פעם סיפור אמיתי?", en: "Do you believe in ghosts, or have you experienced any real ghost stories?" },
-  { he: "מה הצרה הגדולה ביותר שנכנסת/ת אליה בילדות?", en: "What's the most trouble you've gotten in as a kid?" },
-  { he: "מה הדבר הראשון שאת/ה זוכר/ת שרצית להיות כשתגדל/י?", en: "What was the first thing you remember wanting to be when you grew up?" },
-  { he: "מה העונה האהובה עליך בשנה ולמה?", en: "What's your favorite time of year and why?" },
-  { he: "מה סרט דיסני האהוב עליך?", en: "What's your favorite Disney movie?" },
-  { he: "מה הספורט האהוב עליך?", en: "What's your favorite sport?" },
-  { he: "מה תמיד יכול לגרום לך לחייך?", en: "What can always make you smile?" },
-  { he: "מה אחד הדברים המטורפים ביותר שעשית/ת בחייך?", en: "What's one of the craziest things you've done in your life?" },
-  { he: "ממה את/ה הכי פוחד/ת?", en: "What are you the most scared of?" },
-  { he: "מה הכי חשוב לך בזוגיות?", en: "What's most important to you in a relationship?" },
-  { he: "ספר/י לי על ההתאהבות הראשונה שלך", en: "Tell me about your very first crush" },
-  { he: "מה האוכל הביתי האהוב עליך?", en: "What's your favorite home-cooked meal?" },
-  { he: "מה האוכל האהוב עליך להזמין כשיוצאים לאכול בחוץ?", en: "What's your favorite food to get when you go out to eat?" },
-  { he: "מה הפסקול הראשון שרכשת/ת?", en: "What was the first soundtrack you owned?" },
-  { he: "אם יכולת לקבל כשרון מדהים כלשהו, מה היית בוחר/ת?", en: "If you could have any world-class talent what would it be?" },
-  { he: "מה יש לך עכשיו במקרר שלא היית רוצה/ת שאראה?", en: "What one thing do you have in your fridge right now that you wouldn't want me to see?" },
-  { he: "מה אחד הרגעים הבלתי נשכחים ביותר בחייך?", en: "What's one of the most memorable moments in your life?" },
-  { he: "מה אחד הרגעים המביכים ביותר שלך?", en: "What's one of your most embarrassing moments?" },
-  { he: "מה אחד השיעורים הגדולים ביותר שלמדת/ת בחיים?", en: "What's one of the biggest lessons you've learned?" },
-  { he: "אם היית צריך/ה להפוך לחיה לשבוע, איזו חיה היית בוחר/ת?", en: "If you had to become an animal for a week, what animal would you choose?" },
-  { he: "מה התכונה האהובה עליך אצל המין השני?", en: "What's your favorite quality of the opposite sex?" },
-  { he: "מה היית רוצה/ת להשיג בעוד כמה שנים?", en: "What would you love to have accomplished years from now?" },
-  { he: "מי את/ה מעריץ/ה?", en: "Who do you admire or look up to?" },
-  { he: "מה הדברים שאת/ה מוצא/ת מעוררי השראה?", en: "What types of things do you find inspiring?" },
-  { he: "אם יכולת לשנות דבר אחד בעולם, מה זה היה?", en: "If you could change one thing in the world, what would it be?" },
-  { he: "מה אחד השיעורים הגדולים שלמדת/ת מזוגיות קודמת?", en: "What is one of the biggest lessons you've learned from a past relationship?" },
-  { he: "מה חוויה שהיית עושה/ת אם כסף לא היה מגבלה?", en: "What's a dream experience you would have if money was not an object?" },
-  { he: "איך היית מבלה/ת את סוף השבוע אם לא היו לך דברים לסדר?", en: "How would you spend your weekends if you didn't have any errands to run?" },
-  { he: "עם איזה בן/בת משפחה את/ה הכי קרוב/ה?", en: "What family member are you the closest with?" },
-  { he: "אילו משחקי קופסא את/ה אוהב/ת לשחק?", en: "What board games do you like to play?" },
-  { he: "מה המשחק האהוב עליך שאת/ה זוכר/ת ששיחקת בילדות?", en: "What was your favorite game you remember playing as a kid?" },
-  { he: "האם עשית/ת אי פעם משהו בילדות – כמו תעלול – שהכניס אותך לצרות?", en: "Did you ever do something as a child, such as a prank, that got you into trouble?" },
-  { he: "מכל הדברים שמרגיזים אותך, מה המוזר ביותר?", en: "Of all your pet-peeves, which is the strangest?" },
-  { he: "האם את/ה רוחני/ת או דתי/ה בדרך כלשהי? אם כן, איך?", en: "Are you spiritual or religious in any way? If so, how?" },
-  { he: "את/ה אוהב/ת יותר – ים או הרים?", en: "Are you an ocean person or a mountain person?" },
-  { he: "מה הז'אנר המוזיקלי האהוב עליך?", en: "What is your favorite genre of music?" },
-  { he: "מי היית רוצה/ת לראות בהופעה חיה?", en: "Who would you love to see in concert?" },
-  { he: "אם יכולת לקרוא מחשבות, של מי היית רוצה/ת לקרוא?", en: "If you could read minds, whose would you want to read?" },
-  { he: "איזו חיה את/ה מחשיב/ה לסקסית ביותר?", en: "Which animal do you consider to be the sexiest?" },
-  { he: "מה דבר אחד שלעולם לא תעשה/י שוב?", en: "What is one thing you will never do again?" },
-  { he: "מה קרה בפעם האחרונה שהיית הכי עצבני/ת בחייך?", en: "What happened the last time you were the most nervous in your life?" },
-  { he: "מה ההרגל הגרוע ביותר שלך?", en: "What's your worst habit?" },
-  { he: "מי מכיר/ה אותך הכי טוב?", en: "Who knows you the best?" },
-  { he: "אילו פעילויות חוץ-לימודיות עשית/ת בתיכון?", en: "What after-school activities did you do in high school?" },
-  { he: "מה סיפור האהבה הראשון שאת/ה זוכר/ת שהשפיע עליך (סרט או מהחיים האמיתיים)?", en: "What was the first love story you remember that impacted your life (movie or real life)?" },
-  { he: "האם היית/ית אי פעם מאוהב/ת?", en: "Have you ever been in love?" },
-  { he: "מה משהו שממש מוציא אותך מדעתך?", en: "What is something that really drives you crazy?" },
-  { he: "מה למדת/ת מהסבא/סבתא שלך?", en: "What's something you learned from your grandparents?" },
-  { he: "אילו זיכרונות יש לך על הסבא/סבתא שלך?", en: "What memories do you have about your grandparents?" },
-  { he: "אם היית/ית צריך/ה לבחור קריירה אחרת, מה הייתה הבחירה הראשונה שלך?", en: "If you had to choose a different career, what would be your first choice?" },
-  { he: "לאילו עמותות או ארגוני התנדבות את/ה תורם/ת?", en: "What types of charities or volunteer groups do you give back to?" },
-  { he: "איך את/ה אוהב/ת להירגע אחרי יום מתיש?", en: "How do you like to unwind after a stressful day?" },
-  { he: "מה ג'אנק פוד האהוב עליך?", en: "What's your favorite junk food?" },
-  { he: "האם עשית/ת אי פעם דיאטת ניקוי?", en: "Have you ever done a cleanse?" },
-  { he: "מה את/ה הכי מעריץ/ה באמא שלך?", en: "What do you admire most about your mom?" },
-  { he: "מה שיעור אחד שלמדת/ת מאבא שלך?", en: "What's one lesson you've learned from your dad?" },
-  { he: "אם יכולת לחזור בזמן, איך היית משנה/ת את הדרך שבה ההורים שלך גידלו אותך?", en: "If you could go back in time, how would you change the way your parents raised you?" },
-  { he: "מה ענישה אחת שההורים שלך ענישו אותך בה שאת/ה זוכר/ת מהילדות?", en: "What's one punishment your parents gave you that you remember from your childhood?" },
-  { he: "מי הנבל האהוב עליך (סרט, ספר, סדרה)?", en: "Who is your favorite villain?" },
-  { he: "איך הכרת/ת את החבר/ה הכי טוב/ה שלך?", en: "How did you and your best friend meet?" },
-  { he: "מה את/ה הכי מעריץ/ה בחבר/ה הכי טוב/ה שלך?", en: "What do you admire most about your best friend?" },
-  { he: "האם יש לך ילדים, או שאת/ה רוצה/ת ילדים?", en: "Do you have kids, or do you want kids?" },
-  { he: "האם היית/ית מבקר/ת אי פעם בחוף עירום?", en: "Would you ever visit a nude beach?" },
-  { he: "בוקסר או סליפ?", en: "Boxers or briefs?" },
-  { he: "גלוח חלק לגמרי או קצת שיטה? (אם אתה/את מבין/ה למה הכוונה)", en: "Putting green or baby's bottom (if you know what I mean)?" },
-  { he: "מה התנוחה האהובה עליך בסקס?", en: "What's your favorite position during sex?" },
-  { he: "את/ה אוהב/ת לדבר מלוכלך?", en: "Do you like talking dirty?" },
-  { he: "מה את/ה לובש/ת כשאת/ה הולך/ת לישון?", en: "What do you wear when you go to bed?" },
-  { he: "אילו בגדים גורמים לך להתעורר?", en: "What kind of outfits turn you on?" },
-  { he: "מה אחת הפנטזיות שלך?", en: "What's one of your fantasies?" },
-  { he: "איזה סוג לבנים את/ה מוצא/ת סקסי?", en: "What kind of lingerie do you think is sexy?" },
-  { he: "איפה תמיד רצית/ת לקיים יחסי מין?", en: "Where have you always wanted to have sex?" },
-  { he: "אם יכולת להמציא טעם גלידה, מה הוא היה?", en: "If you could invent an ice cream flavor, what would it be?" },
-  { he: "לאיזו תקופה בהיסטוריה היית הכי רוצה/ת לבקר?", en: "Which time in history would you most love to visit?" },
-  { he: "מה אחד הזיכרונות האהובים עליך מחטיבת הביניים?", en: "What's one of your favorite memories from junior high school?" },
-  { he: "מה הייתה הנשיקה הכי מביכה שהייתה לך אי פעם?", en: "What was the most embarrassing kiss you've ever had?" },
-  { he: "מה הדבר הכי קטן שיכול לגרום לך לחייך באמצע יום גרוע?", en: "What's the smallest thing that can make you smile in the middle of a bad day?" },
-  { he: "איזה סוג הומור הכי עובד עליך?", en: "What type of humor works best on you?" },
-  { he: "מה הדבר הכי ספונטני שעשית ויצא ממנו סיפור טוב?", en: "What's the most spontaneous thing you've ever done that turned into a good story?" },
-  { he: "מה הדבר הראשון שאת/ה בדרך כלל שם/ה לב אליו אצל בן אדם?", en: "What's the first thing you usually notice about a person?" },
-  { he: "איזה מאכל את/ה יכול/ה לאכול כל החיים ולא להימאס עליך?", en: "What food could you eat for the rest of your life and never get tired of?" },
-  { he: "אם היית צריך/ה לבחור עיר אחת לגור בה לשנה, איפה זה היה?", en: "If you had to pick one city to live in for a year, where would it be?" },
-  { he: "מה הדבר הכי מוזר שאנשים בדרך כלל לא מנחשים עליך?", en: "What's the weirdest thing about you that people usually don't guess?" },
-  { he: "איזה שיר תמיד מצליח להרים לך את מצב הרוח?", en: "Which song always manages to lift your mood?" },
-  { he: "מה היה התחביב הכי מוזר או מצחיק שהיה לך פעם?", en: "What's the strangest or funniest hobby you ever had?" },
-  { he: "איזה הרגל קטן שלך את/ה אוהב/ת בעצמך?", en: "What's a small habit of yours that you like about yourself?" },
-  { he: "מה הדבר שהכי מרגיע אותך כשאת/ה בלחץ?", en: "What calms you down the most when you're stressed?" },
-  { he: "איזה סרט או סדרה את/ה יכול/ה לראות שוב ושוב בלי להשתעמם?", en: "What movie or series can you watch over and over without getting bored?" },
-  { he: "מה הדבר הכי ילדותי שאת/ה עדיין נהנה/ית ממנו?", en: "What's the most childish thing you still enjoy?" },
-  { he: "איזה סוג אנשים גורמים לך להרגיש בנוח מהר?", en: "What kind of people make you feel comfortable quickly?" },
-  { he: "מה הדבר שהכי מוריד לך מבן אדם בדייט?", en: "What turns you off the most about someone on a date?" },
-  { he: "מה הדבר שהכי מעלה לך מבן אדם בדייט?", en: "What makes you think the most of someone on a date?" },
-  { he: "אם החיים שלך היו סדרה, איזה ז'אנר היא הייתה?", en: "If your life were a series, what genre would it be?" },
-  { he: "מה הדבר הכי לא צפוי שקרה לך השנה?", en: "What's the most unexpected thing that happened to you this year?" },
-  { he: "איזה כישרון היית רוצה/ת לקבל מיידית בלי להתאמן?", en: "What talent would you want to receive instantly without having to practice?" },
-  { he: "מה המקום שהכי עושה לך תחושה של בית?", en: "What place makes you feel the most at home?" },
-  { he: "איזה דבר קטן בדייט יכול להפוך אותו להרבה יותר טוב?", en: "What small thing on a date can make it so much better?" },
-  { he: "מה הדבר הכי מצחיק שקרה לך בגלל אי הבנה?", en: "What's the funniest thing that ever happened to you because of a misunderstanding?" },
-  { he: "איזה חוק קטן היית מוסיף/ה לעולם כדי שאנשים יהיו פחות מעצבנים?", en: "What small law would you add to the world so people would be less annoying?" },
-  { he: "מה הדבר שאת/ה הכי אוהב/ת לעשות כשיש לך יום חופשי לגמרי?", en: "What do you love doing most when you have a completely free day?" },
-  { he: "איזה סוג של מחמאה באמת עושה לך משהו?", en: "What kind of compliment really moves you?" },
-  { he: "מה הדבר האחרון שגרם לך לחשוב – אוקיי, זה היה רגע טוב?", en: "What was the last thing that made you think, 'Okay, that was a good moment'?" },
-  { he: "איזה דבר למדת על עצמך רק בשנים האחרונות?", en: "What's something you learned about yourself only in recent years?" },
-  { he: "מה הדבר שאת/ה אוהב/ת באנשים, אבל לא כולם שמים לב אליו?", en: "What do you love about people that not everyone notices?" },
-  { he: "אם היית צריך/ה לתאר את עצמך בתור מזג אוויר, איזה מזג אוויר היית?", en: "If you had to describe yourself as a type of weather, what weather would you be?" },
-  { he: "מה הדבר הכי מוזר שיכול להפוך מישהו ליותר חמוד בעיניך?", en: "What's the strangest thing that can make someone cuter in your eyes?" },
-  { he: "אם נשאר לך רק יום אחד לחיות, האם היית מספר/ת על כך למישהו? למי?", en: "If you had just one day left to live, would you tell anyone about it? Who?" },
-  { he: "אם היו נותנים לך קופסה עם כל מה שאי פעם איבדת, מה היית מחפש/ת קודם?", en: "If you were given a box containing everything you'd ever lost, what would you look for first?" },
-  { he: "מה איבדת בניסיון להפוך לאדם שאחרים רצו שתהיה/י?", en: "What have you lost trying to become the person others wanted you to be?" },
-  { he: "אם היית יכול/ה ללכת לכל מקום בעולם ברגע זה, היית הולך/ת למקום מסוים או אל מישהו?", en: "If you could go anywhere in the world right now, would you go somewhere or to someone?" },
-  { he: "אם הייתה לך בחירה, היית מוחק/ת את הזיכרון הגרוע ביותר שלך או חווה מחדש את הטוב ביותר?", en: "If you had the choice, would you erase your worst memory or relive your best one?" },
-  { he: "איזה ״מה אם…״ רודף אותך הכי הרבה?", en: "Which “what if…” haunts you the most?" },
-  { he: "אם החיים שלך היו מסתיימים בעוד שנה, אילו מהדאגות שלך עכשיו היו מפסיקות מיד להיות חשובות?", en: "If your life were to end in a year, which of your current worries would instantly stop mattering?" },
-  { he: "אם יום אחד הילד/ה שלך היה חי את החיים שאת/ה חי/ה היום, מה היית מייעץ/ת לו/ה לשנות?", en: "If one day your child were living the life you're living now, what would you advise them to change?" },
-  { he: "האם הרגשת פעם שאת/ה מתגעגע/ת לעצמך? לאדם שהיית לפני שהחיים שינו הכול?", en: "Have you ever had the feeling that you miss yourself? The person you were before life changed everything?" }
+  { he: "מה ההרפתקאה הבאה שלך?", en: "What is your next great adventure?", cat: "light" },
+  { he: "למה את/ה אסיר/ת תודה ברגע זה?", en: "What are you thankful for this very moment?", cat: "deep" },
+  { he: "מה גורם לך להרגיש חי/ה?", en: "What makes you feel really alive?", cat: "deep" },
+  { he: "איזו תכונה מוזרה יש למשפחה שלך?", en: "What is a quirk your family has?", cat: "light" },
+  { he: "למה את/ה מתגעגע/ת?", en: "What do you miss?", cat: "deep" },
+  { he: "איפה היית רוצה/ת להתעורר מחר?", en: "Where would you like to wake up tomorrow?", cat: "light" },
+  { he: "למה את/ה הכי מצפה?", en: "What are you looking forward to?", cat: "light" },
+  { he: "איזה חפץ היית מציל/ה אם הבית היה עולה באש?", en: "What object would you save if your house was on fire?", cat: "deep" },
+  { he: "האם היית רוצה/ת שהילדים שלך יהיו כמוך?", en: "Do you want your children (if you have any) to be like you?", cat: "deep" },
+  { he: "האם יש משהו שלא היית רוצה/ת לדעת?", en: "Is there anything you wish you didn't know?", cat: "deep" },
+  { he: "למה את/ה הכי אסיר/ת תודה?", en: "What are you most grateful for?", cat: "deep" },
+  { he: "אם היו לך 24 שעות לחיות, עם מי היית בעוד 23 שעות?", en: "If you had 24 hours left to live, who would you be with in 23 hours?", cat: "deep" },
+  { he: "מה המחמאה הכי טובה שקיבלת?", en: "What was the best compliment you ever received?", cat: "light" },
+  { he: "מה דבר אחד שיכול לקרות היום כדי להפוך אותו לטוב אף יותר?", en: "What is one thing that could happen today to make it even better?", cat: "light" },
+  { he: "האם יש מישהו בחיים שלך שאת/ה מעריץ/ה? למה?", en: "Is there anybody in your life you admire? Why?", cat: "deep" },
+  { he: "מה אנשים צריכים לעשות יותר?", en: "What should people do more of?", cat: "deep" },
+  { he: "במה את/ה לא משקיע/ה מספיק זמן?", en: "What don't you spend enough time doing?", cat: "deep" },
+  { he: "איך החברים שלך היו מתארים אותך בכמה משפטים?", en: "How would your friends describe you in a few sentences?", cat: "light" },
+  { he: "אם יכולת לנהל מדינה משלך, איך זה היה?", en: "If you could create and run your own country, what would it be like?", cat: "light" },
+  { he: "אם יכולת לדבר עם כל אחד בעולם, מה היית אומר/ת?", en: "If you could talk to everyone in the world, what would you say?", cat: "deep" },
+  { he: "מה היית רוצה/ת לדעת?", en: "What do you wish you knew?", cat: "deep" },
+  { he: "מה עושה לך צמרמורת?", en: "What gives you goose bumps?", cat: "light" },
+  { he: "מה את/ה רוצה/ת לעשות לפני שתמות?", en: "What do you want to do before you die?", cat: "deep" },
+  { he: "מה גורם לך לאבד את תחושת הזמן?", en: "What makes you lose track of time?", cat: "light" },
+  { he: "על מה את/ה נלחם/ת?", en: "What do you fight for?", cat: "deep" },
+  { he: "מהי העדיפות מספר אחת שלך היום?", en: "What is your number one priority today?", cat: "deep" },
+  { he: "איזו עצה היית מבקש/ת מהגיבור הגדול ביותר שלך?", en: "What advice would you ask for from your greatest hero?", cat: "deep" },
+  { he: "מה היה הגיל האהוב עליך עד כה ולמה?", en: "What has been your favorite age so far and why?", cat: "light" },
+  { he: "תאר/י יום מושלם.", en: "Describe a perfect day.", cat: "light" },
+  { he: "איזו עצה היית נותן/ת לעצמך לפני חמש שנים?", en: "What advice would you give to yourself five years ago?", cat: "deep" },
+  { he: "מה את/ה מעריך/ה שלא עולה כסף?", en: "What do you value that doesn't cost money?", cat: "deep" },
+  { he: "את מי בעולם הזה את/ה אוהב/ת ביותר ומה את/ה עושה בקשר לזה?", en: "Who in this world do you love most and what are you doing about it?", cat: "love" },
+  { he: "על מה את/ה מבלה יותר מדי זמן?", en: "What do you spend too much time doing?", cat: "light" },
+  { he: "מה מסקרן אותך בזמן האחרון?", en: "What are you curious about lately?", cat: "light" },
+  { he: "מה האירוע המשפיע ביותר שקרה בחיים שלך?", en: "What was the most impactful event in your life?", cat: "deep" },
+  { he: "האם את/ה מסתגל/ת לסביבה או בולט/ת? איך זה?", en: "Do you fit in or stand out? How so?", cat: "deep" },
+  { he: "מהו הזיכרון הקדום ביותר שלך על הישג?", en: "What's your earliest memory of achievement?", cat: "light" },
+  { he: "איזו עצה היית מציע/ה לתינוק שנולד עכשיו?", en: "What piece of advice would you offer a newborn infant?", cat: "deep" },
+  { he: "ממה העולם הזה צריך יותר?", en: "What does this world need more of?", cat: "deep" },
+  { he: "מה היית רוצה/ת שאנשים ידעו עליך?", en: "What do you wish more people knew about you?", cat: "deep" },
+  { he: "איזו שאלה היית שואל/ת מגיד/ת עתידות?", en: "What is the one question you would ask a fortune teller?", cat: "light" },
+  { he: "איזו תכונה לא פיזית את/ה מוצא/ת מושכת באדם אחר?", en: "What non-physical traits do you find attractive in other people?", cat: "love" },
+  { he: "האם יש מישהו שהיית סומך/ת עליו בחיים שלך?", en: "Is there anyone who you would trust with your life?", cat: "deep" },
+  { he: "אם יכולת לעצור את הזמן, מה היית עושה/ת?", en: "If you could freeze time, what would you do?", cat: "light" },
+  { he: "מה נותן לך תקווה?", en: "What gives you hope?", cat: "deep" },
+  { he: "מה הדבר הכי ספונטני שעשית?", en: "What is the most spontaneous thing you've ever done?", cat: "light" },
+  { he: "איזה שיעור לחיים היית רוצה/ת שכולם ילמדו בבית הספר?", en: "What life lesson do you wish everyone was taught in school?", cat: "deep" },
+  { he: "תאר/י נקודת מפנה בחיים שלך.", en: "Describe a turning point in your life.", cat: "deep" },
+  { he: "מה את/ה מוצא/ת יפה בחיים?", en: "What do you find beautiful?", cat: "deep" },
+  { he: "מה עשית לאחרונה שגרם לך לאבד לגמרי את תחושת הזמן?", en: "What were you doing the last time you lost track of time?", cat: "light" },
+  { he: "מה המצב שלך... באמת?", en: "How are you... really doing?", cat: "deep" },
+  { he: "מה החוזקה הגדולה שלך?", en: "What is your greatest strength?", cat: "deep" },
+  { he: "מה את/ה מקווה/ת להשיג בעוד 5 שנים?", en: "What do you hope to achieve in five years?", cat: "deep" },
+  { he: "במה את/ה מאמין/ה?", en: "What do you stand for?", cat: "deep" },
+  { he: "במה התנסית לאחרונה בפעם הראשונה?", en: "What is something new you have recently tried?", cat: "light" },
+  { he: "מה חשוב לך ולמה?", en: "What matters to you and why?", cat: "deep" },
+  { he: "למה היית עד/ה שחיזק את האמונה שלך באנושות?", en: "What have you witnessed that has strengthened your faith in humanity?", cat: "deep" },
+  { he: "אם לא היית צריך/ה לדאוג לכסף, איך היית חי/ה אחרת?", en: "If money were no concern, how would you lead life differently?", cat: "light" },
+  { he: "אילו דברים קטנים בחיים גורמים לך לעצור ולהעריך?", en: "What little things in life do you stop and appreciate?", cat: "deep" },
+  { he: "איזה הרגל חדש את/ה רוצה/ת ליצור?", en: "What is a new habit you want to form?", cat: "light" },
+  { he: "איך היית חי/ה אחרת אם לא יכולת למות?", en: "How would you live life differently if you could never die?", cat: "deep" },
+  { he: "למה את/ה עושה את מה שאת/ה עושה?", en: "Why do you do what you do?", cat: "deep" },
+  { he: "מהי תפיסה מוטעית נפוצה שאנשים עושים עליך?", en: "What is a common misconception that people may have about you?", cat: "deep" },
+  { he: "למען מי או מה את/ה עובד/ת?", en: "For who or what do you work for?", cat: "deep" },
+  { he: "מה הופך אותך למי שאתה/את?", en: "What makes you, you?", cat: "deep" },
+  { he: "מה הדברים שאת/ה שם/ה לב אליהם כשאת/ה פוגש/ת אדם חדש?", en: "What are the first things you notice when meeting someone?", cat: "love" },
+  { he: "מה הדבר הכי אדיב שמישהו עשה עבורך?", en: "What is the kindest thing someone has ever done for you?", cat: "deep" },
+  { he: "מתי הייתה הפעם האחרונה ששיקרת? ולמה?", en: "When was the last time you lied? Why?", cat: "deep" },
+  { he: "מה זאת הצלחה עבורך?", en: "What does success mean to you?", cat: "deep" },
+  { he: "מה יש לך שאת/ה לא יכול/ה לחיות בלעדיו?", en: "What do you have that you cannot live without?", cat: "light" },
+  { he: "תאר/י משהו שעשית בפעם הראשונה בחיים שלך.", en: "Describe a first in your life.", cat: "light" },
+  { he: "תאר/י גן עדן.", en: "Describe paradise.", cat: "light" },
+  { he: "מה המתנה הכי טובה שמישהו יכול להעניק לך?", en: "What is the best gift that someone can give you?", cat: "light" },
+  { he: "איך את/ה מרגיש/ת לגבי ימי הולדת?", en: "How do you feel about birthdays?", cat: "light" },
+  { he: "איפה את/ה מוצא/ת שלווה?", en: "Where do you find peace?", cat: "deep" },
+  { he: "מה התחלת ומעולם לא סיימת, ולמה?", en: "What have you started but never finished, and why?", cat: "deep" },
+  { he: "כיצד את/ה יוצר/ת שינוי בעולם?", en: "How are you making a difference in the world?", cat: "deep" },
+  { he: "מה המקום האהוב עליך בעולם?", en: "What is your favorite place in the world?", cat: "light" },
+  { he: "איך את/ה מראה אהבה?", en: "How do you show love?", cat: "love" },
+  { he: "מה את/ה יכול/ה לעשות היום שלא יכולת לפני שנה?", en: "What can you do today that you couldn't do a year ago?", cat: "light" },
+  { he: "האם היו לך אי פעם חוויות קרובות למוות?", en: "Have you ever had any near-death experiences?", cat: "deep" },
+  { he: "מה את/ה הכי מעריך/ה בחברות?", en: "What do you value most in a friendship?", cat: "deep" },
+  { he: "מה את/ה מעריך/ה?", en: "What do you value?", cat: "deep" },
+  { he: "מה החלום שלך?", en: "What do you dream about?", cat: "deep" },
+  { he: "מה היה חלום הילדות שלך? האם הוא השתנה?", en: "What was your childhood dream? Has it changed?", cat: "light" },
+  { he: "איך היחסים שלך עם אמא שלך?", en: "What is your relationship with your mother like?", cat: "deep" },
+  { he: "על מה את/ה חושב/ת כשאת/ה מתעורר/ת בבוקר?", en: "What do you think about when you wake up?", cat: "light" },
+  { he: "מה את/ה עושה/ת כשאף אחד לא מסתכל?", en: "What do you do when nobody is watching?", cat: "light" },
+  { he: "את מי היית מזמין/ה לארוחת ערב אם יכולת להזמין כל אחד בעולם?", en: "Given the choice of anyone in the world, whom would you want as a dinner guest?", cat: "light" },
+  { he: "האם היית רוצה/ת להיות מפורסם/ת? באיזה אופן?", en: "Would you like to be famous? In what way?", cat: "light" },
+  { he: "לפני שיחת טלפון, האם אתה/את מתרגל/ת מה תגיד/י? למה?", en: "Before making a telephone call, do you ever rehearse what you are going to say? Why?", cat: "light" },
+  { he: "מה היה מהווה עבורך יום 'מושלם'?", en: "What would constitute a perfect day for you?", cat: "light" },
+  { he: "מתי שרת לעצמך לאחרונה? ולמישהו אחר?", en: "When did you last sing to yourself? To someone else?", cat: "light" },
+  { he: "אם יכולת לחיות עד 90 עם הגוף או המוח שלך בגיל 30, מה היית בוחר/ת?", en: "If you could live to 90 and retain either the mind or body of a 30-year-old, which would you want?", cat: "light" },
+  { he: "יש לך תחושת בטן איך תמות?", en: "Do you have a secret hunch about how you will die?", cat: "deep" },
+  { he: "מנה שלושה דברים שנראה שיש לנו במשותף.", en: "Name three things you and your partner appear to have in common.", cat: "love" },
+  { he: "על מה בחיים שלך את/ה הכי אסיר/ת תודה?", en: "For what in your life do you feel most grateful?", cat: "deep" },
+  { he: "אם יכולת לשנות משהו באופן שגדלת, מה היית משנה?", en: "If you could change anything about the way you were raised, what would it be?", cat: "deep" },
+  { he: "קח/י 4 דקות וספר/י את סיפור חייך בכמה שיותר פרטים.", en: "Take four minutes and tell your partner your life story in as much detail as possible.", cat: "deep" },
+  { he: "אם יכולת לקום מחר עם תכונה או יכולת אחת, מה היית בוחר/ת?", en: "If you could wake up tomorrow having gained any one quality or ability, what would it be?", cat: "light" },
+  { he: "אם כדור בדולח יכול היה לספר לך אמת אחת על חייך, מה היית רוצה/ת לדעת?", en: "If a crystal ball could tell you the truth about anything, what would you want to know?", cat: "deep" },
+  { he: "יש משהו שאת/ה חולם/ת לעשות הרבה זמן? למה עדיין לא עשית/ת אותו?", en: "Is there something that you've dreamed of doing for a long time? Why haven't you done it?", cat: "deep" },
+  { he: "מה ההישג הכי גדול של חייך?", en: "What is the greatest accomplishment of your life?", cat: "deep" },
+  { he: "מה אתה/את הכי מעריך/ה בחברות?", en: "What do you value most in a friendship?", cat: "deep" },
+  { he: "מהו הזיכרון היקר ביותר שלך?", en: "What is your most treasured memory?", cat: "deep" },
+  { he: "מה הזיכרון הכי קשה שלך?", en: "What is your most terrible memory?", cat: "deep" },
+  { he: "אם ידעת שתמות בפתאומיות בעוד שנה, האם היית משנה משהו? למה?", en: "If you knew that in one year you would die suddenly, would you change anything about the way you are now living?", cat: "deep" },
+  { he: "מה המשמעות של חברות עבורך?", en: "What does friendship mean to you?", cat: "deep" },
+  { he: "מה התפקיד של אהבה וחיבה בחיים שלך?", en: "What roles do love and affection play in your life?", cat: "love" },
+  { he: "שתף/י תכונה חיובית שאת/ה רואה בי. תחליפו חמישה פעמים.", en: "Alternate sharing something you consider a positive characteristic of your partner. Share a total of five items.", cat: "love" },
+  { he: "עד כמה המשפחה שלך חמה וקרובה? הרגשת שהילדות שלך הייתה שמחה יותר מאחרים?", en: "How close and warm is your family? Do you feel your childhood was happier than most other people's?", cat: "deep" },
+  { he: "איך את/ה מרגיש/ת כלפי היחסים שלך עם אמא שלך?", en: "How do you feel about your relationship with your mother?", cat: "deep" },
+  { he: "אמור/י שלושה משפטים שמתחילים ב'אנחנו', לדוגמא: 'אנחנו מרגישים...'", en: "Make three true 'we' statements each. For instance, 'We are both in this room feeling...'", cat: "love" },
+  { he: "השלם/י: 'הלוואי שהיה לי מישהו שהייתי יכול/ה לחלוק איתו...'", en: "Complete this sentence: 'I wish I had someone with whom I could share...'", cat: "deep" },
+  { he: "מה חשוב לך שהאדם שממול ידע עליך?", en: "If you were going to become a close friend with your partner, what would be important for them to know?", cat: "love" },
+  { he: "תגיד/י לי מה את/ה אוהב/ת בי. תהיה/י כנה מאוד.", en: "Tell your partner what you like about them; be very honest this time.", cat: "love" },
+  { he: "שתף/י אותי ברגע הכי מביך בחייך.", en: "Share with your partner an embarrassing moment in your life.", cat: "light" },
+  { he: "מתי בכית לאחרונה מול מישהו? ולבד?", en: "When did you last cry in front of another person? By yourself?", cat: "deep" },
+  { he: "תגיד/י לי משהו שאת/ה כבר אוהב/ת בי.", en: "Tell your partner something that you like about them already.", cat: "love" },
+  { he: "האם יש משהו שרציני מדי מכדי לצחוק עליו?", en: "What, if anything, is too serious to be joked about?", cat: "deep" },
+  { he: "אם היית מת/ה הלילה בלי להיפרד, מה היית מתחרט/ת שלא אמרת? למה לא אמרת עדיין?", en: "If you were to die this evening with no opportunity to communicate with anyone, what would you most regret not having told someone?", cat: "deep" },
+  { he: "הבית שלך עולה באש. לאחר שמצלת/ת את יקיריך, יש לך זמן לחלץ פריט אחד – מה תבחר/י?", en: "Your house catches fire. After saving your loved ones, you can save one item. What would it be?", cat: "deep" },
+  { he: "מי מבין קרובי המשפחה שלך – מותו/מותה היה מזעזע אותך הכי הרבה? למה?", en: "Of all the people in your family, whose death would you find most disturbing? Why?", cat: "deep" },
+  { he: "שתף/י אותי בבעיה אישית ובקש/י ממני עצה. אחר כך בקש/י ממני לשקף איך אתה/את נראה/ת מרגיש/ה.", en: "Share a personal problem and ask your partner's advice on how they might handle it.", cat: "deep" },
+  { he: "מה הייתה אחת מחופשות המשפחה האהובות עליך בילדות?", en: "What was one of your favorite family vacations growing up?", cat: "light" },
+  { he: "אם זכית בלוטו גדול, מה היית עושה/ת עם הכסף?", en: "If you won the lottery, what would you do?", cat: "light" },
+  { he: "אם יכולת לחיות מחדש יום מדהים מחייך, איזה יום היית בוחר/ת?", en: "If you could re-live an amazing day in your life, what day would you want to re-live?", cat: "light" },
+  { he: "אם יכולת להחליף חיים עם אחד לאחד ליום אחד, מי זה היה ומה היית רוצה/ת לחוות?", en: "If you could trade lives with one person for one day, who would it be and what would you want to experience?", cat: "light" },
+  { he: "בוא/י ניתן אחד לשני שמות ראפ אקראיים – מה יהיה שם הראפ שלי?", en: "Let's give each other random rapper names — what would my rap name be?", cat: "light" },
+  { he: "מתי את/ה זוכר/ת לראשונה שהיה לך מחשבה מינית?", en: "When was the first time you remember having a sexual thought?", cat: "spicy" },
+  { he: "מה הייתה הנשיקה הגרועה ביותר שחווית?", en: "What was your worst kiss ever?", cat: "love" },
+  { he: "אם אמרו לך שנשאר לך רק חודש לחיות, מה היית עושה/ת?", en: "If you were told you only had one month left to live, what would you do?", cat: "deep" },
+  { he: "ספר/י לי על ספר או סרט תיעודי שממש השפיע עליך ושינה את האופן שבו את/ה רואה דברים", en: "What's a book or documentary film that really had an impact on you?", cat: "deep" },
+  { he: "אם יכולת להתחתן עם דמות בדיונית, מי זה היה ולמה?", en: "If you could marry a fictional character, who would it be and why?", cat: "light" },
+  { he: "מה את/ה הכי מעריך/ה בחברים שלך?", en: "What is it about your friends you appreciate the most?", cat: "deep" },
+  { he: "אם יכולת לגור בכל עיר בעולם מלבד המקום הנוכחי, מה הייתה הבחירה הראשונה שלך?", en: "If you could live in any city other than where you live now, what would be your first choice?", cat: "light" },
+  { he: "אם יכולת לאכול ארוחת צהריים עם כל אחד, חי או מת, מי זה היה ולמה?", en: "If you could have lunch with anyone living or dead, who would it be and why?", cat: "light" },
+  { he: "מה מעורר בך תשוקה?", en: "What are you passionate about?", cat: "deep" },
+  { he: "אם יכולת לנפנף בשרביט קסם וליצור את חיי האהבה האידיאליים שלך, איך זה היה נראה?", en: "If you could wave a magic wand and create your ideal love life, what would that look like?", cat: "love" },
+  { he: "ספר/י לי על ריקוד בית הספר הראשון שלך", en: "Tell me about your very first school dance", cat: "love" },
+  { he: "מי היה המורה האהוב עליך בתיכון? למה?", en: "Who was your favorite teacher in high school? Why?", cat: "light" },
+  { he: "מי השפיע עליך הכי הרבה בחיים? מה למדת ממנו/ה?", en: "Who has had a big impact on your life? What was a lesson you learned from them?", cat: "deep" },
+  { he: "אילו שלוש מילים היית רוצה/ת שישתמשו בהן כדי לתאר אותך אחרי שתלך מהעולם?", en: "What three words would you want people to describe you as after you pass away?", cat: "deep" },
+  { he: "מה היית רוצה/ת לעשות יותר אם היה לך יותר זמן?", en: "What's something you would love to do more of, if you had more time?", cat: "light" },
+  { he: "מה החג האהוב עליך?", en: "What's your favorite holiday?", cat: "light" },
+  { he: "מה מסורת חגיגית שהיית מוכן/ת לוותר עליה?", en: "What's a holiday tradition you could leave behind?", cat: "light" },
+  { he: "איך היית/ית כילד/ה?", en: "What were you like as a kid?", cat: "light" },
+  { he: "מה משהו רגיל בחיי היומיום שלך שאת/ה מוצא/ת יפה?", en: "What's something ordinary in your daily life that you find beautiful?", cat: "deep" },
+  { he: "מה האיבר האהוב עליך בגוף?", en: "What is your favorite body part?", cat: "spicy" },
+  { he: "האם את/ה מאמין/ה ברוחות רפאים, או חווית/ה אי פעם סיפור אמיתי?", en: "Do you believe in ghosts, or have you experienced any real ghost stories?", cat: "light" },
+  { he: "מה הצרה הגדולה ביותר שנכנסת/ת אליה בילדות?", en: "What's the most trouble you've gotten in as a kid?", cat: "light" },
+  { he: "מה הדבר הראשון שאת/ה זוכר/ת שרצית להיות כשתגדל/י?", en: "What was the first thing you remember wanting to be when you grew up?", cat: "light" },
+  { he: "מה העונה האהובה עליך בשנה ולמה?", en: "What's your favorite time of year and why?", cat: "light" },
+  { he: "מה סרט דיסני האהוב עליך?", en: "What's your favorite Disney movie?", cat: "light" },
+  { he: "מה הספורט האהוב עליך?", en: "What's your favorite sport?", cat: "light" },
+  { he: "מה תמיד יכול לגרום לך לחייך?", en: "What can always make you smile?", cat: "light" },
+  { he: "מה אחד הדברים המטורפים ביותר שעשית/ת בחייך?", en: "What's one of the craziest things you've done in your life?", cat: "light" },
+  { he: "ממה את/ה הכי פוחד/ת?", en: "What are you the most scared of?", cat: "deep" },
+  { he: "מה הכי חשוב לך בזוגיות?", en: "What's most important to you in a relationship?", cat: "love" },
+  { he: "ספר/י לי על ההתאהבות הראשונה שלך", en: "Tell me about your very first crush", cat: "love" },
+  { he: "מה האוכל הביתי האהוב עליך?", en: "What's your favorite home-cooked meal?", cat: "light" },
+  { he: "מה האוכל האהוב עליך להזמין כשיוצאים לאכול בחוץ?", en: "What's your favorite food to get when you go out to eat?", cat: "light" },
+  { he: "מה הפסקול הראשון שרכשת/ת?", en: "What was the first soundtrack you owned?", cat: "light" },
+  { he: "אם יכולת לקבל כשרון מדהים כלשהו, מה היית בוחר/ת?", en: "If you could have any world-class talent what would it be?", cat: "light" },
+  { he: "מה יש לך עכשיו במקרר שלא היית רוצה/ת שאראה?", en: "What one thing do you have in your fridge right now that you wouldn't want me to see?", cat: "light" },
+  { he: "מה אחד הרגעים הבלתי נשכחים ביותר בחייך?", en: "What's one of the most memorable moments in your life?", cat: "light" },
+  { he: "מה אחד הרגעים המביכים ביותר שלך?", en: "What's one of your most embarrassing moments?", cat: "light" },
+  { he: "מה אחד השיעורים הגדולים ביותר שלמדת/ת בחיים?", en: "What's one of the biggest lessons you've learned?", cat: "deep" },
+  { he: "אם היית צריך/ה להפוך לחיה לשבוע, איזו חיה היית בוחר/ת?", en: "If you had to become an animal for a week, what animal would you choose?", cat: "light" },
+  { he: "מה התכונה האהובה עליך אצל המין השני?", en: "What's your favorite quality of the opposite sex?", cat: "love" },
+  { he: "מה היית רוצה/ת להשיג בעוד כמה שנים?", en: "What would you love to have accomplished years from now?", cat: "deep" },
+  { he: "מי את/ה מעריץ/ה?", en: "Who do you admire or look up to?", cat: "deep" },
+  { he: "מה הדברים שאת/ה מוצא/ת מעוררי השראה?", en: "What types of things do you find inspiring?", cat: "deep" },
+  { he: "אם יכולת לשנות דבר אחד בעולם, מה זה היה?", en: "If you could change one thing in the world, what would it be?", cat: "deep" },
+  { he: "מה אחד השיעורים הגדולים שלמדת/ת מזוגיות קודמת?", en: "What is one of the biggest lessons you've learned from a past relationship?", cat: "love" },
+  { he: "מה חוויה שהיית עושה/ת אם כסף לא היה מגבלה?", en: "What's a dream experience you would have if money was not an object?", cat: "light" },
+  { he: "איך היית מבלה/ת את סוף השבוע אם לא היו לך דברים לסדר?", en: "How would you spend your weekends if you didn't have any errands to run?", cat: "light" },
+  { he: "עם איזה בן/בת משפחה את/ה הכי קרוב/ה?", en: "What family member are you the closest with?", cat: "deep" },
+  { he: "אילו משחקי קופסא את/ה אוהב/ת לשחק?", en: "What board games do you like to play?", cat: "light" },
+  { he: "מה המשחק האהוב עליך שאת/ה זוכר/ת ששיחקת בילדות?", en: "What was your favorite game you remember playing as a kid?", cat: "light" },
+  { he: "האם עשית/ת אי פעם משהו בילדות – כמו תעלול – שהכניס אותך לצרות?", en: "Did you ever do something as a child, such as a prank, that got you into trouble?", cat: "light" },
+  { he: "מכל הדברים שמרגיזים אותך, מה המוזר ביותר?", en: "Of all your pet-peeves, which is the strangest?", cat: "light" },
+  { he: "האם את/ה רוחני/ת או דתי/ה בדרך כלשהי? אם כן, איך?", en: "Are you spiritual or religious in any way? If so, how?", cat: "deep" },
+  { he: "את/ה אוהב/ת יותר – ים או הרים?", en: "Are you an ocean person or a mountain person?", cat: "light" },
+  { he: "מה הז'אנר המוזיקלי האהוב עליך?", en: "What is your favorite genre of music?", cat: "light" },
+  { he: "מי היית רוצה/ת לראות בהופעה חיה?", en: "Who would you love to see in concert?", cat: "light" },
+  { he: "אם יכולת לקרוא מחשבות, של מי היית רוצה/ת לקרוא?", en: "If you could read minds, whose would you want to read?", cat: "light" },
+  { he: "איזו חיה את/ה מחשיב/ה לסקסית ביותר?", en: "Which animal do you consider to be the sexiest?", cat: "spicy" },
+  { he: "מה דבר אחד שלעולם לא תעשה/י שוב?", en: "What is one thing you will never do again?", cat: "deep" },
+  { he: "מה קרה בפעם האחרונה שהיית הכי עצבני/ת בחייך?", en: "What happened the last time you were the most nervous in your life?", cat: "light" },
+  { he: "מה ההרגל הגרוע ביותר שלך?", en: "What's your worst habit?", cat: "light" },
+  { he: "מי מכיר/ה אותך הכי טוב?", en: "Who knows you the best?", cat: "deep" },
+  { he: "אילו פעילויות חוץ-לימודיות עשית/ת בתיכון?", en: "What after-school activities did you do in high school?", cat: "light" },
+  { he: "מה סיפור האהבה הראשון שאת/ה זוכר/ת שהשפיע עליך (סרט או מהחיים האמיתיים)?", en: "What was the first love story you remember that impacted your life (movie or real life)?", cat: "love" },
+  { he: "האם היית/ית אי פעם מאוהב/ת?", en: "Have you ever been in love?", cat: "love" },
+  { he: "מה משהו שממש מוציא אותך מדעתך?", en: "What is something that really drives you crazy?", cat: "light" },
+  { he: "מה למדת/ת מהסבא/סבתא שלך?", en: "What's something you learned from your grandparents?", cat: "deep" },
+  { he: "אילו זיכרונות יש לך על הסבא/סבתא שלך?", en: "What memories do you have about your grandparents?", cat: "deep" },
+  { he: "אם היית/ית צריך/ה לבחור קריירה אחרת, מה הייתה הבחירה הראשונה שלך?", en: "If you had to choose a different career, what would be your first choice?", cat: "light" },
+  { he: "לאילו עמותות או ארגוני התנדבות את/ה תורם/ת?", en: "What types of charities or volunteer groups do you give back to?", cat: "deep" },
+  { he: "איך את/ה אוהב/ת להירגע אחרי יום מתיש?", en: "How do you like to unwind after a stressful day?", cat: "light" },
+  { he: "מה ג'אנק פוד האהוב עליך?", en: "What's your favorite junk food?", cat: "light" },
+  { he: "האם עשית/ת אי פעם דיאטת ניקוי?", en: "Have you ever done a cleanse?", cat: "light" },
+  { he: "מה את/ה הכי מעריץ/ה באמא שלך?", en: "What do you admire most about your mom?", cat: "deep" },
+  { he: "מה שיעור אחד שלמדת/ת מאבא שלך?", en: "What's one lesson you've learned from your dad?", cat: "deep" },
+  { he: "אם יכולת לחזור בזמן, איך היית משנה/ת את הדרך שבה ההורים שלך גידלו אותך?", en: "If you could go back in time, how would you change the way your parents raised you?", cat: "deep" },
+  { he: "מה ענישה אחת שההורים שלך ענישו אותך בה שאת/ה זוכר/ת מהילדות?", en: "What's one punishment your parents gave you that you remember from your childhood?", cat: "light" },
+  { he: "מי הנבל האהוב עליך (סרט, ספר, סדרה)?", en: "Who is your favorite villain?", cat: "light" },
+  { he: "איך הכרת/ת את החבר/ה הכי טוב/ה שלך?", en: "How did you and your best friend meet?", cat: "light" },
+  { he: "מה את/ה הכי מעריץ/ה בחבר/ה הכי טוב/ה שלך?", en: "What do you admire most about your best friend?", cat: "deep" },
+  { he: "האם יש לך ילדים, או שאת/ה רוצה/ת ילדים?", en: "Do you have kids, or do you want kids?", cat: "love" },
+  { he: "האם היית/ית מבקר/ת אי פעם בחוף עירום?", en: "Would you ever visit a nude beach?", cat: "spicy" },
+  { he: "בוקסר או סליפ?", en: "Boxers or briefs?", cat: "spicy" },
+  { he: "גלוח חלק לגמרי או קצת שיטה? (אם אתה/את מבין/ה למה הכוונה)", en: "Putting green or baby's bottom (if you know what I mean)?", cat: "spicy" },
+  { he: "מה התנוחה האהובה עליך בסקס?", en: "What's your favorite position during sex?", cat: "spicy" },
+  { he: "את/ה אוהב/ת לדבר מלוכלך?", en: "Do you like talking dirty?", cat: "spicy" },
+  { he: "מה את/ה לובש/ת כשאת/ה הולך/ת לישון?", en: "What do you wear when you go to bed?", cat: "spicy" },
+  { he: "אילו בגדים גורמים לך להתעורר?", en: "What kind of outfits turn you on?", cat: "spicy" },
+  { he: "מה אחת הפנטזיות שלך?", en: "What's one of your fantasies?", cat: "spicy" },
+  { he: "איזה סוג לבנים את/ה מוצא/ת סקסי?", en: "What kind of lingerie do you think is sexy?", cat: "spicy" },
+  { he: "איפה תמיד רצית/ת לקיים יחסי מין?", en: "Where have you always wanted to have sex?", cat: "spicy" },
+  { he: "אם יכולת להמציא טעם גלידה, מה הוא היה?", en: "If you could invent an ice cream flavor, what would it be?", cat: "light" },
+  { he: "לאיזו תקופה בהיסטוריה היית הכי רוצה/ת לבקר?", en: "Which time in history would you most love to visit?", cat: "light" },
+  { he: "מה אחד הזיכרונות האהובים עליך מחטיבת הביניים?", en: "What's one of your favorite memories from junior high school?", cat: "light" },
+  { he: "מה הייתה הנשיקה הכי מביכה שהייתה לך אי פעם?", en: "What was the most embarrassing kiss you've ever had?", cat: "love" },
+  { he: "מה הדבר הכי קטן שיכול לגרום לך לחייך באמצע יום גרוע?", en: "What's the smallest thing that can make you smile in the middle of a bad day?", cat: "light" },
+  { he: "איזה סוג הומור הכי עובד עליך?", en: "What type of humor works best on you?", cat: "light" },
+  { he: "מה הדבר הכי ספונטני שעשית ויצא ממנו סיפור טוב?", en: "What's the most spontaneous thing you've ever done that turned into a good story?", cat: "light" },
+  { he: "מה הדבר הראשון שאת/ה בדרך כלל שם/ה לב אליו אצל בן אדם?", en: "What's the first thing you usually notice about a person?", cat: "love" },
+  { he: "איזה מאכל את/ה יכול/ה לאכול כל החיים ולא להימאס עליך?", en: "What food could you eat for the rest of your life and never get tired of?", cat: "light" },
+  { he: "אם היית צריך/ה לבחור עיר אחת לגור בה לשנה, איפה זה היה?", en: "If you had to pick one city to live in for a year, where would it be?", cat: "light" },
+  { he: "מה הדבר הכי מוזר שאנשים בדרך כלל לא מנחשים עליך?", en: "What's the weirdest thing about you that people usually don't guess?", cat: "light" },
+  { he: "איזה שיר תמיד מצליח להרים לך את מצב הרוח?", en: "Which song always manages to lift your mood?", cat: "light" },
+  { he: "מה היה התחביב הכי מוזר או מצחיק שהיה לך פעם?", en: "What's the strangest or funniest hobby you ever had?", cat: "light" },
+  { he: "איזה הרגל קטן שלך את/ה אוהב/ת בעצמך?", en: "What's a small habit of yours that you like about yourself?", cat: "light" },
+  { he: "מה הדבר שהכי מרגיע אותך כשאת/ה בלחץ?", en: "What calms you down the most when you're stressed?", cat: "light" },
+  { he: "איזה סרט או סדרה את/ה יכול/ה לראות שוב ושוב בלי להשתעמם?", en: "What movie or series can you watch over and over without getting bored?", cat: "light" },
+  { he: "מה הדבר הכי ילדותי שאת/ה עדיין נהנה/ית ממנו?", en: "What's the most childish thing you still enjoy?", cat: "light" },
+  { he: "איזה סוג אנשים גורמים לך להרגיש בנוח מהר?", en: "What kind of people make you feel comfortable quickly?", cat: "deep" },
+  { he: "מה הדבר שהכי מוריד לך מבן אדם בדייט?", en: "What turns you off the most about someone on a date?", cat: "love" },
+  { he: "מה הדבר שהכי מעלה לך מבן אדם בדייט?", en: "What makes you think the most of someone on a date?", cat: "love" },
+  { he: "אם החיים שלך היו סדרה, איזה ז'אנר היא הייתה?", en: "If your life were a series, what genre would it be?", cat: "light" },
+  { he: "מה הדבר הכי לא צפוי שקרה לך השנה?", en: "What's the most unexpected thing that happened to you this year?", cat: "light" },
+  { he: "איזה כישרון היית רוצה/ת לקבל מיידית בלי להתאמן?", en: "What talent would you want to receive instantly without having to practice?", cat: "light" },
+  { he: "מה המקום שהכי עושה לך תחושה של בית?", en: "What place makes you feel the most at home?", cat: "deep" },
+  { he: "איזה דבר קטן בדייט יכול להפוך אותו להרבה יותר טוב?", en: "What small thing on a date can make it so much better?", cat: "love" },
+  { he: "מה הדבר הכי מצחיק שקרה לך בגלל אי הבנה?", en: "What's the funniest thing that ever happened to you because of a misunderstanding?", cat: "light" },
+  { he: "איזה חוק קטן היית מוסיף/ה לעולם כדי שאנשים יהיו פחות מעצבנים?", en: "What small law would you add to the world so people would be less annoying?", cat: "light" },
+  { he: "מה הדבר שאת/ה הכי אוהב/ת לעשות כשיש לך יום חופשי לגמרי?", en: "What do you love doing most when you have a completely free day?", cat: "light" },
+  { he: "איזה סוג של מחמאה באמת עושה לך משהו?", en: "What kind of compliment really moves you?", cat: "deep" },
+  { he: "מה הדבר האחרון שגרם לך לחשוב – אוקיי, זה היה רגע טוב?", en: "What was the last thing that made you think, 'Okay, that was a good moment'?", cat: "deep" },
+  { he: "איזה דבר למדת על עצמך רק בשנים האחרונות?", en: "What's something you learned about yourself only in recent years?", cat: "deep" },
+  { he: "מה הדבר שאת/ה אוהב/ת באנשים, אבל לא כולם שמים לב אליו?", en: "What do you love about people that not everyone notices?", cat: "deep" },
+  { he: "אם היית צריך/ה לתאר את עצמך בתור מזג אוויר, איזה מזג אוויר היית?", en: "If you had to describe yourself as a type of weather, what weather would you be?", cat: "light" },
+  { he: "מה הדבר הכי מוזר שיכול להפוך מישהו ליותר חמוד בעיניך?", en: "What's the strangest thing that can make someone cuter in your eyes?", cat: "love" },
+  { he: "אם נשאר לך רק יום אחד לחיות, האם היית מספר/ת על כך למישהו? למי?", en: "If you had just one day left to live, would you tell anyone about it? Who?", cat: "deep" },
+  { he: "אם היו נותנים לך קופסה עם כל מה שאי פעם איבדת, מה היית מחפש/ת קודם?", en: "If you were given a box containing everything you'd ever lost, what would you look for first?", cat: "deep" },
+  { he: "מה איבדת בניסיון להפוך לאדם שאחרים רצו שתהיה/י?", en: "What have you lost trying to become the person others wanted you to be?", cat: "deep" },
+  { he: "אם היית יכול/ה ללכת לכל מקום בעולם ברגע זה, היית הולך/ת למקום מסוים או אל מישהו?", en: "If you could go anywhere in the world right now, would you go somewhere or to someone?", cat: "deep" },
+  { he: "אם הייתה לך בחירה, היית מוחק/ת את הזיכרון הגרוע ביותר שלך או חווה מחדש את הטוב ביותר?", en: "If you had the choice, would you erase your worst memory or relive your best one?", cat: "deep" },
+  { he: "איזה ״מה אם…״ רודף אותך הכי הרבה?", en: "Which “what if…” haunts you the most?", cat: "deep" },
+  { he: "אם החיים שלך היו מסתיימים בעוד שנה, אילו מהדאגות שלך עכשיו היו מפסיקות מיד להיות חשובות?", en: "If your life were to end in a year, which of your current worries would instantly stop mattering?", cat: "deep" },
+  { he: "אם יום אחד הילד/ה שלך היה חי את החיים שאת/ה חי/ה היום, מה היית מייעץ/ת לו/ה לשנות?", en: "If one day your child were living the life you're living now, what would you advise them to change?", cat: "deep" },
+  { he: "האם הרגשת פעם שאת/ה מתגעגע/ת לעצמך? לאדם שהיית לפני שהחיים שינו הכול?", en: "Have you ever had the feeling that you miss yourself? The person you were before life changed everything?", cat: "deep" }
 ];
+
+// ─── CATEGORIES ──────────────────────────────
+// Every question has a `cat` key from this list. "All" is not a category — it is
+// simply "no filter" (nothing selected).
+const CATS = {
+  light: { emoji: '😄', he: 'קליל',   en: 'Light' },
+  deep:  { emoji: '💭', he: 'עמוק',   en: 'Deep' },
+  love:  { emoji: '💞', he: 'רומנטי', en: 'Romantic' },
+  spicy: { emoji: '🔥', he: 'נועז',   en: 'Spicy' }
+};
+const CAT_KEYS = Object.keys(CATS);
 
 // ─── STATE ───────────────────────────────────
 const STORAGE_KEY = 'bigtalk_shown_v1';
+const CATS_KEY = 'bigtalk_cats_v1';
+const LANG_KEY = 'bigtalk_lang_v1';
 
 function loadShown() {
   try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); }
@@ -749,43 +1002,74 @@ function saveShown(set) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
 }
 
+function loadPref(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : JSON.parse(raw);
+  } catch { return fallback; }
+}
+
+function savePref(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
 let shown = loadShown();
-let isWelcome = true;
+let activeCats = new Set([].concat(loadPref(CATS_KEY, [])).filter(k => CATS[k])); // empty = all
+let lang = loadPref(LANG_KEY, 'both');          // 'he' | 'en' | 'both'
+if (!['he', 'en', 'both'].includes(lang)) lang = 'both';
+let view = { type: 'welcome' };                 // welcome | question | done
 let isAnimating = false;
 
 // ─── DOM ─────────────────────────────────────
 const card = document.getElementById('card');
 const cardFace = document.getElementById('card-face');
 const doneOverlay = document.getElementById('done-overlay');
+const stage = document.getElementById('stage');
+const deck = document.getElementById('deck');
+const deckCards = [...deck.children];
 const shuffleBtn = document.getElementById('shuffle-btn');
 const dontRepeat = document.getElementById('dont-repeat');
 const resetBtn = document.getElementById('reset-btn');
-const remainingNum = document.getElementById('remaining-num');
+const counterEl = document.getElementById('counter');
+const progressFill = document.getElementById('progress-fill');
+const chipsEl = document.getElementById('chips');
+const langSwitch = document.getElementById('lang-switch');
+const particles = document.getElementById('particles');
 
-// ─── COUNTER ─────────────────────────────────
-function updateCounter() {
-  const total = QUESTIONS.length;
+// ─── POOL + COUNTER ──────────────────────────
+const inScope = q => activeCats.size === 0 || activeCats.has(q.cat);
+
+function getPool() {
   const dontRepeatOn = dontRepeat.checked;
-  if (!dontRepeatOn) {
-    remainingNum.textContent = total;
-    return;
-  }
-  const remaining = total - shown.size;
-  remainingNum.textContent = remaining <= 0 ? '0' : remaining;
+  return QUESTIONS
+    .map((q, i) => ({ q, i }))
+    .filter(({ q, i }) => inScope(q) && (!dontRepeatOn || !shown.has(i)));
+}
+
+function updateCounter() {
+  const total = QUESTIONS.filter(inScope).length;
+  const remaining = dontRepeat.checked ? getPool().length : total;
+
+  counterEl.innerHTML = dontRepeat.checked
+    ? `נשארו <b>${remaining}</b> מתוך ${total}`
+    : `<b>${total}</b> קלפים בחפיסה`;
+
+  const ratio = total ? remaining / total : 0;
+  progressFill.style.width = (ratio * 100) + '%';
+
+  // The visible stack of card backs gets thinner as the deck runs down
+  const level = remaining === 0 ? 0 : Math.max(1, Math.ceil(ratio * deckCards.length));
+  deckCards.forEach((el, i) => el.classList.toggle('gone', i < deckCards.length - level));
 }
 
 // ─── GET NEXT ────────────────────────────────
 function getNext() {
-  const dontRepeatOn = dontRepeat.checked;
-  const pool = QUESTIONS
-    .map((q, i) => ({ q, i }))
-    .filter(({ i }) => !dontRepeatOn || !shown.has(i));
-
+  const pool = getPool();
   if (pool.length === 0) return null;
 
   const { q, i } = pool[Math.floor(Math.random() * pool.length)];
 
-  if (dontRepeatOn) {
+  if (dontRepeat.checked) {
     shown.add(i);
     saveShown(shown);
   }
@@ -793,34 +1077,78 @@ function getNext() {
   return { q, i };
 }
 
-// ─── SHOW CARD ───────────────────────────────
-function showQuestion(q) {
-  doneOverlay.classList.remove('visible');
-  cardFace.innerHTML = `
-    <p class="question-he">${q.he}</p>
-    <div class="card-divider"></div>
-    <p class="question-en">${q.en}</p>
-  `;
+// ─── RENDER ──────────────────────────────────
+function questionHTML(q) {
+  const he = `<p class="question-he">${q.he}</p>`;
+  if (lang === 'he') return he;
+  if (lang === 'en') return `<p class="question-en main">${q.en}</p>`;
+  return `${he}<div class="card-divider"></div><p class="question-en">${q.en}</p>`;
 }
 
-function showDone() {
-  doneOverlay.classList.add('visible');
-  cardFace.innerHTML = '';
+function badgeHTML(q) {
+  const c = CATS[q.cat];
+  if (!c) return '';
+  return `<div class="cat-badge"><span>${c.emoji}</span><span>${lang === 'en' ? c.en : c.he}</span></div>`;
 }
 
-function showWelcome() {
-  doneOverlay.classList.remove('visible');
-  cardFace.innerHTML = `
-    <div class="welcome-icon">🃏</div>
-    <div class="welcome-text">Real Talk</div>
-    <div class="welcome-sub">Press Shuffle to begin</div>
-  `;
+function welcomeHTML() {
+  const he = `
+    <p class="welcome-line">עוברים תור, עונים בכנות</p>
+    <p class="welcome-sub">לחצו על הכפתור או החליקו את הקלף כדי להתחיל</p>`;
+  const en = `
+    <p class="welcome-line welcome-en">Take turns, answer honestly</p>
+    <p class="welcome-sub welcome-en">Press the button or swipe the card to begin</p>`;
+  const body = lang === 'he' ? he : lang === 'en' ? en : `${he}<div class="card-divider"></div>${en}`;
+  return `<div class="welcome-icon">🃏</div><div class="welcome-brand">Real Talk</div>${body}`;
+}
+
+function doneHTML() {
+  // Cards left in other categories? Then the person only needs to pick another one.
+  const othersLeft = activeCats.size > 0 && QUESTIONS.some((q, i) => !inScope(q) && !shown.has(i));
+  const he = `
+    <div class="done-text">כל הכבוד!</div>
+    <div class="done-sub">${othersLeft ? 'סיימתם את כל הקלפים בקטגוריות שבחרתם.<br>אפשר לבחור קטגוריה נוספת, או להתחיל מחדש.' : 'סיימתם את כל הקלפים'}</div>`;
+  const en = `
+    <div class="done-text done-en">Well done!</div>
+    <div class="done-sub done-en">${othersLeft ? 'You finished every card in your chosen categories.<br>Pick another category, or start over.' : 'You went through every card'}</div>`;
+  const body = lang === 'he' ? he : lang === 'en' ? en : `${he}${en}`;
+  const btn = lang === 'en' ? 'Start over' : 'מתחילים מחדש';
+  return `<div class="done-icon">🎉</div>${body}<button type="button" class="done-btn">${btn}</button>`;
+}
+
+// Long questions on small cards: shrink the text step by step until it fits.
+function fitText() {
+  cardFace.style.setProperty('--fit', 1);
+  const wrap = cardFace.querySelector('.qwrap');
+  if (!wrap) return;
+  let fit = 1;
+  while (wrap.scrollHeight > wrap.clientHeight + 1 && fit > 0.55) {
+    fit = Math.round((fit - 0.05) * 100) / 100;
+    cardFace.style.setProperty('--fit', fit);
+  }
+}
+
+function render() {
+  doneOverlay.classList.toggle('visible', view.type === 'done');
+
+  if (view.type === 'question') {
+    cardFace.dataset.cat = view.q.cat || '';
+    cardFace.innerHTML = `${badgeHTML(view.q)}<div class="qwrap"><div class="qinner">${questionHTML(view.q)}</div></div>`;
+  } else if (view.type === 'welcome') {
+    delete cardFace.dataset.cat;
+    cardFace.innerHTML = `<div class="qwrap"><div class="qinner">${welcomeHTML()}</div></div>`;
+  } else {
+    delete cardFace.dataset.cat;
+    cardFace.innerHTML = '';
+    doneOverlay.innerHTML = doneHTML();
+  }
+  fitText();
 }
 
 // ─── PARTICLES ───────────────────────────────
+const PARTICLE_COLORS = ['#e04f78', '#c8896a', '#f4a3be', '#ffd700', '#ff6b9d'];
+
 function burst() {
-  const container = document.getElementById('particles');
-  const colors = ['#e04f78','#c8896a','#f4a3be','#ffd700','#ff6b9d'];
   const rect = shuffleBtn.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
@@ -834,73 +1162,139 @@ function burst() {
     const dy = Math.sin(angle) * dist + 'px';
     p.style.cssText = `
       left:${cx}px; top:${cy}px;
-      background:${colors[k % colors.length]};
+      background:${PARTICLE_COLORS[k % PARTICLE_COLORS.length]};
       --dx:${dx}; --dy:${dy};
       animation: particle-burst 0.6s ease-out ${k * 0.03}s forwards;
     `;
-    container.appendChild(p);
+    particles.appendChild(p);
     setTimeout(() => p.remove(), 700);
   }
 }
 
-// ─── SHUFFLE ─────────────────────────────────
-function doShuffle() {
+// Bigger, slower burst from the middle of the card when the deck runs out
+function confetti() {
+  const rect = stage.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  for (let k = 0; k < 44; k++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = Math.random() * 2 * Math.PI;
+    const dist = 110 + Math.random() * 190;
+    const size = 6 + Math.random() * 6;
+    p.style.cssText = `
+      left:${cx}px; top:${cy}px;
+      width:${size}px; height:${size}px;
+      border-radius:${Math.random() < 0.5 ? '50%' : '2px'};
+      background:${PARTICLE_COLORS[k % PARTICLE_COLORS.length]};
+      --dx:${Math.cos(angle) * dist}px; --dy:${Math.sin(angle) * dist}px;
+      animation: particle-burst 1s ease-out ${Math.random() * 0.15}s forwards;
+    `;
+    particles.appendChild(p);
+    setTimeout(() => p.remove(), 1300);
+  }
+}
+
+function haptic() {
+  try { if (navigator.vibrate) navigator.vibrate(12); } catch {}
+}
+
+// ─── NEXT CARD (button = flip, swipe = fly off) ─
+function advance(dir) {
   if (isAnimating) return;
   isAnimating = true;
   shuffleBtn.disabled = true;
   shuffleBtn.classList.add('spinning');
 
   burst();
+  haptic();
+  deck.classList.add('shuffling');
 
-  // Phase 1: flip current card out
-  card.classList.add('flip-out');
+  // Phase 1: current card leaves
+  if (dir) {
+    card.style.setProperty('--fly', dir);
+    card.classList.add('swipe-out');
+  } else {
+    card.classList.add('flip-out');
+  }
 
   setTimeout(() => {
     const result = getNext();
+    view = result ? { type: 'question', q: result.q } : { type: 'done' };
 
-    if (!result) {
-      // All done
-      card.classList.remove('flip-out');
-      card.classList.add('start-hidden');
-      showDone();
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          card.classList.remove('start-hidden');
-          card.classList.add('flip-in');
-        });
-      });
-    } else {
-      showQuestion(result.q);
-      card.classList.remove('flip-out');
-      card.classList.add('start-hidden');
+    // Jump the card to its hidden start position without animating, swap the text,
+    // then flip the new card in.
+    card.style.transition = 'none';
+    card.classList.remove('flip-out', 'swipe-out');
+    card.classList.add('start-hidden');
+    render();
+    void card.offsetWidth;
+    card.style.transition = '';
+    card.classList.remove('start-hidden');
+    card.classList.add('flip-in');
 
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          card.classList.remove('start-hidden');
-          card.classList.add('flip-in');
-        });
-      });
-    }
-
-    isWelcome = false;
     updateCounter();
+    deck.classList.remove('shuffling');
+    if (view.type === 'done') confetti();
 
     setTimeout(() => {
       card.classList.remove('flip-in');
+      card.style.removeProperty('--fly');
       shuffleBtn.classList.remove('spinning');
       shuffleBtn.disabled = false;
       isAnimating = false;
-    }, 500);
-  }, 280);
+    }, 560);
+  }, dir ? 300 : 280);
 }
+
+// ─── SWIPE ───────────────────────────────────
+let drag = null;
+
+stage.addEventListener('pointerdown', e => {
+  if (isAnimating || e.target.closest('button')) return;
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: 0, locked: false };
+});
+
+stage.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x;
+  const dy = e.clientY - drag.y;
+
+  if (!drag.locked) {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    if (Math.abs(dy) > Math.abs(dx)) { drag = null; return; }   // vertical: leave it to the browser
+    drag.locked = true;
+    try { stage.setPointerCapture(e.pointerId); } catch {}
+    card.style.transition = 'none';
+  }
+
+  drag.dx = dx;
+  card.style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
+});
+
+function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const { dx, locked } = drag;
+  drag = null;
+  if (!locked) return;
+
+  card.style.transition = '';
+  card.style.transform = '';
+  const threshold = Math.min(90, stage.clientWidth * 0.25);
+  if (e.type === 'pointerup' && Math.abs(dx) > threshold) advance(dx > 0 ? 1 : -1);
+}
+
+stage.addEventListener('pointerup', endDrag);
+stage.addEventListener('pointercancel', endDrag);
 
 // ─── RESET ───────────────────────────────────
 function doReset() {
+  if (isAnimating) return;
   shown.clear();
   saveShown(shown);
-  isWelcome = true;
-  doneOverlay.classList.remove('visible');
-  showWelcome();
+  view = { type: 'welcome' };
+  render();
   updateCounter();
 }
 
@@ -911,14 +1305,77 @@ dontRepeat.addEventListener('change', () => {
     shown.clear();
     saveShown(shown);
   }
+  onScopeChange();
+});
+
+// ─── CATEGORIES (chips) ──────────────────────
+function syncChips() {
+  chipsEl.querySelectorAll('.chip').forEach(chip => {
+    const key = chip.dataset.cat;
+    const on = key === 'all' ? activeCats.size === 0 : activeCats.has(key);
+    chip.classList.toggle('active', on);
+    chip.setAttribute('aria-pressed', on);
+  });
+}
+
+// The pool changed (category or toggle). If we were on the "finished" screen and
+// there are cards again, go back to the start screen; otherwise leave the card alone.
+function onScopeChange() {
+  if (view.type === 'done') {
+    view = getPool().length ? { type: 'welcome' } : { type: 'done' };
+    render();
+  }
   updateCounter();
+}
+
+chipsEl.addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  const key = chip.dataset.cat;
+
+  if (key === 'all') {
+    activeCats.clear();
+  } else {
+    if (activeCats.has(key)) activeCats.delete(key); else activeCats.add(key);
+    if (activeCats.size === CAT_KEYS.length) activeCats.clear();   // every category = all
+  }
+
+  savePref(CATS_KEY, [...activeCats]);
+  syncChips();
+  onScopeChange();
+});
+
+// ─── LANGUAGE ────────────────────────────────
+function syncLang() {
+  langSwitch.querySelectorAll('button').forEach(btn => {
+    const on = btn.dataset.lang === lang;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', on);
+  });
+}
+
+langSwitch.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  lang = btn.dataset.lang;
+  savePref(LANG_KEY, lang);
+  syncLang();
+  render();
 });
 
 // ─── EVENTS ──────────────────────────────────
-shuffleBtn.addEventListener('click', doShuffle);
+shuffleBtn.addEventListener('click', () => advance(0));
 resetBtn.addEventListener('click', doReset);
+doneOverlay.addEventListener('click', e => {
+  if (e.target.closest('.done-btn')) doReset();
+});
+window.addEventListener('resize', fitText);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitText);
 
 // ─── INIT ────────────────────────────────────
+syncChips();
+syncLang();
+render();
 updateCounter();
 </script>
 </body>
